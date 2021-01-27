@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>THIS IS A TEST</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+    <div>
+        <main>
+            <h1>Testing testing testint</h1>
+            {{range .Paths}}
+                <div>
+                A photo
+                    <a href="#">
+                    <img class="img-fluid img-thumbnail" src="{{.}}">
+                    </a>
+                </div>
+        {{end}}
+        </main>
+    </div>
+
+</body>
+</html>
