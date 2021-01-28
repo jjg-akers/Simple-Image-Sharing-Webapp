@@ -27,8 +27,6 @@ type IndexHandler struct {
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	//fmt.Println("executing indexHandler")
-
 	type pathserver struct {
 		Paths []*url.URL
 	}
