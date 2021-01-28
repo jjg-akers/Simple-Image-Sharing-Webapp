@@ -5,5 +5,6 @@ go 1.14
 require (
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/minio/minio-go/v7 v7.0.7
+	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/text v0.3.5 // indirect
 )

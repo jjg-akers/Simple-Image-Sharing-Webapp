@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
@@ -18,6 +19,7 @@ func init() {
 
 type IndexHandler struct {
 	RemoteStore *remotestorage.MinIOClient
+	DB          *sql.DB
 }
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

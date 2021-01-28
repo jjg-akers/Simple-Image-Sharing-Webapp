@@ -9,45 +9,127 @@ import (
 	"os/signal"
 	"sync"
 
+	"github.com/urfave/cli/v2"
+
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/handlers"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
 )
 
+type PhotoShareApp struct {
+	config *build.AppConfig
+}
+
+func NewApp() *PhotoShareApp {
+	return &PhotoShareApp{
+		config: build.NewAppConfig(),
+	}
+}
+
 func main() {
+
 	fmt.Println("starting application")
+
+	api := newPhotoShareApp()
+
+	//build cli app
+	var app = cli.NewApp()
+	app.Usage = "Allow users to upload/ view photos in webapp"
+
+	// load ENV into config
+	app.Flags = build.LoadAppConfig(api.config)
+
+	app.Action = api.startAPI
+
+	if err := app.Run(os.Args); err != nil {
+		log.Println("Error Running application: ", err)
+	}
+}
+
+type photoShareApp struct {
+	config *build.AppConfig
+}
+
+func newPhotoShareApp() *photoShareApp {
+	return &photoShareApp{
+		config: build.NewAppConfig(),
+	}
+}
+
+func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
+
+	// build components
+	db, err := build.NewSQLDB(api.config.DBConfig)
+	if err != nil {
+		return fmt.Errorf("Failed to build SQL DB, err: %s", err)
+	}
+
+	minioClient, err := build.NewMinIOStorage(api.config.StorageConfig)
+	if err != nil {
+		return fmt.Errorf("Failed to build Minio client, err: %s", err)
+	}
+
+	//make new bucket
+	if err := minioClient.MakeNewBucket(cliCtx.Context); err != nil {
+		return fmt.Errorf("Failed to create new bucket, err: %s", err)
+	}
+
+	// upload some default images
+	if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
+		return fmt.Errorf("Failed to upload new image, err: %s", err)
+	}
+
+	//set up handlers
+	indexHandler := &handlers.IndexHandler{
+		RemoteStore: minioClient,
+		DB:          db,
+	}
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	//create handler
-	// get client
-	minioClient, err := remotestorage.NewMinIOClient()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	//make new bucket
-	if err := minioClient.MakeNewBucket(context.Background()); err != nil {
-		log.Fatalln(err)
-	}
-
-	// upload image
-	if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
-		log.Fatalln(err)
-	}
-
-	fmt.Println("successfulling made bucket and uploaded image")
-
-	indexHandler := &handlers.IndexHandler{
-		RemoteStore: minioClient,
-	}
-
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go startServer(context.Background(), &wg, interrupt, indexHandler)
+	go startServer(cliCtx.Context, &wg, interrupt, indexHandler)
 	wg.Wait()
 
+	return nil
 }
+
+// func main() {
+// 	fmt.Println("starting application")
+
+// 	interrupt := make(chan os.Signal, 1)
+// 	signal.Notify(interrupt, os.Interrupt)
+
+// 	//create handler
+// 	// get client
+// 	minioClient, err := remotestorage.NewMinIOClient()
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+
+// 	//make new bucket
+// 	if err := minioClient.MakeNewBucket(context.Background()); err != nil {
+// 		log.Fatalln(err)
+// 	}
+
+// 	// upload image
+// 	if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
+// 		log.Fatalln(err)
+// 	}
+
+// 	fmt.Println("successfulling made bucket and uploaded image")
+
+// 	indexHandler := &handlers.IndexHandler{
+// 		RemoteStore: minioClient,
+// 	}
+
+// 	wg := sync.WaitGroup{}
+// 	wg.Add(1)
+// 	go startServer(context.Background(), &wg, interrupt, indexHandler)
+// 	wg.Wait()
+
+// }
 
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index http.Handler) {
 
