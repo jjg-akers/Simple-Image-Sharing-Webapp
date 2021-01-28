@@ -66,6 +66,7 @@ func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([
 	for i, file := range files {
 		imageName := strings.TrimSuffix(file, filepath.Ext(file))
 		signedURL, err := client.NewPresignedGet(ctx, "testy-mctest-face", imageName)
+		//fmt.Println("url: ", signedURL)
 		if err != nil {
 			return nil, fmt.Errorf("error getting signed url: %s", err)
 		}

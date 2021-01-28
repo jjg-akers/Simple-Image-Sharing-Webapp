@@ -21,8 +21,10 @@ services:
     volumes:
       - ./api/:/app/
     depends_on:
-      - mysql
-      - minio
+      mysql:
+        condition: service_healthy
+      # minio:
+      #   condition: service_started
     links:
       - mysql
       - minio
@@ -35,9 +37,14 @@ services:
       MYSQL_USER: "user"
       MYSQL_PASSWORD: "password"
       MYSQL_RANDOM_ROOT_PASSWORD: 1
+    healthcheck:
+      test: mysql --user=user --password=password --execute="SELECT healthy FROM photoshare.healthcheck" --host=mysql --port=3306 --skip-column-names --silent | grep OK
+      interval: "1s"
+      retries: 60
+      timeout: "500ms"
     restart: always
     volumes:
-      - ./db/initdb:/docker-entrypoint-initdb.d
+      - ./db/dbinit:/docker-entrypoint-initdb.d:ro
     ports:
       - "3308:3306"
   minio:
