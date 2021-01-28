@@ -16,7 +16,6 @@ type MinIOClient struct {
 }
 
 func NewMinIOClient(endpoint, accessKeyID, accessKeySecret string, useSSL bool) (*MinIOClient, error) {
-	//ctx := context.Background()
 	// endpoint := "localhost:9000"
 	// accessKeyID := "minioadmin"
 	// secretAccessKey := "minioadmin"
@@ -39,7 +38,6 @@ func NewMinIOClient(endpoint, accessKeyID, accessKeySecret string, useSSL bool) 
 
 func (mc *MinIOClient) MakeNewBucket(ctx context.Context, bucketName, location string) error {
 
-	// Make a new bucket called mymusic.
 	//bucketName := "mytestbucket"
 	//location := "us-east-1"
 
@@ -62,17 +60,8 @@ func (mc *MinIOClient) MakeNewBucket(ctx context.Context, bucketName, location s
 
 func (mc MinIOClient) UploadImage(ctx context.Context, bucketName, imageName, filePath string) error {
 
-	// path := filepath.Join(wd, "gallery", fname)
-	// nf, err := os.Create(path)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	//objectName := "Blackmore.jpg"
-	//filePath := "cmd/testfiles/Blackmore.jpg"
 	contentType := "application/jpg"
 
-	// Upload the zip file with FPutObject
 	n, err := mc.Client.FPutObject(ctx, bucketName, imageName, filePath, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		log.Println("error uploading image: ", err)
