@@ -13,7 +13,7 @@ func test(db *sql.DB) {
 	// Prepare statement for inserting data
 	stmtIns, err := db.Prepare("INSERT INTO squareNum VALUES( ?, ? )") // ? = placeholder
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		panic(err.Error())
 	}
 	defer stmtIns.Close() // Close the statement when we leave main() / the program terminates
 }
