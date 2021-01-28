@@ -39,8 +39,3 @@ func LoadStorageConfig(config *RemoteStorageConfig) []cli.Flag {
 		},
 	}
 }
-
-// endpoint := "localhost:9000"
-// accessKeyID := "minioadmin"
-// secretAccessKey := "minioadmin"
-// useSSL := false

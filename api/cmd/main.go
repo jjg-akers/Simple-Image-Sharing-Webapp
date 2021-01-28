@@ -75,12 +75,7 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		return fmt.Errorf("Failed to create new bucket, err: %s", err)
 	}
 
-	// upload some images
-	// path := filepath.Join(wd, "gallery", fname)
-	// nf, err := os.Create(path)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	// upload some default images
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalln("coule not get wd: ", err)
@@ -142,12 +137,6 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 		fmt.Println("starting server of 8080")
 		log.Fatal(http.ListenAndServe(":8080", nil))
 	}()
-
-	//remotestorage.NewMinIOClient()
-
-	// fmt.Println("successfully gat new client, made bucket, uploaded image, got URL")
-
-	// fmt.Println("Successfully generated presigned URL", signedURL)
 
 	<-interrupt
 	wg.Done()

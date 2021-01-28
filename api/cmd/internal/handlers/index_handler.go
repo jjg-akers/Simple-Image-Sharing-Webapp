@@ -17,8 +17,6 @@ import (
 var tpl *template.Template
 
 func init() {
-	// wd, _ := os.Getwd()
-	// log.Println(wd)
 	tpl = template.Must(template.ParseGlob("cmd/templates/*.gohtml"))
 }
 
