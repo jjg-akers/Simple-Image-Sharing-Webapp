@@ -37,11 +37,11 @@ func NewMinIOClient(endpoint, accessKeyID, accessKeySecret string, useSSL bool) 
 	}, nil
 }
 
-func (mc *MinIOClient) MakeNewBucket(ctx context.Context) error {
+func (mc *MinIOClient) MakeNewBucket(ctx context.Context, bucketName, location string) error {
 
 	// Make a new bucket called mymusic.
-	bucketName := "mytestbucket"
-	location := "us-east-1"
+	//bucketName := "mytestbucket"
+	//location := "us-east-1"
 
 	err := mc.Client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
 	if err != nil {
@@ -60,21 +60,27 @@ func (mc *MinIOClient) MakeNewBucket(ctx context.Context) error {
 	}
 }
 
-func (mc MinIOClient) UploadImage(ctx context.Context, bucketName string) error {
+func (mc MinIOClient) UploadImage(ctx context.Context, bucketName, imageName, filePath string) error {
 
-	objectName := "Blackmore.jpg"
-	filePath := "cmd/testfiles/Blackmore.jpg"
+	// path := filepath.Join(wd, "gallery", fname)
+	// nf, err := os.Create(path)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	//objectName := "Blackmore.jpg"
+	//filePath := "cmd/testfiles/Blackmore.jpg"
 	contentType := "application/jpg"
 
 	// Upload the zip file with FPutObject
-	n, err := mc.Client.FPutObject(ctx, bucketName, objectName, filePath, minio.PutObjectOptions{ContentType: contentType})
+	n, err := mc.Client.FPutObject(ctx, bucketName, imageName, filePath, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		log.Println("error uploading image: ", err)
 		return err
 		//log.Fatalln(err)
 	}
 
-	log.Printf("Successfully uploaded %s of size %d\n", objectName, n.Size)
+	log.Printf("Successfully uploaded %s of size %d\n", imageName, n.Size)
 	return nil
 }
 

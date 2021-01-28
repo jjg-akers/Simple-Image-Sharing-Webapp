@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/urfave/cli/v2"
@@ -68,15 +70,45 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		return fmt.Errorf("Failed to build Minio client, err: %s", err)
 	}
 
-	//make new bucket
-	if err := minioClient.MakeNewBucket(cliCtx.Context); err != nil {
+	// initialize a bucket and put some random photos in it
+	if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
 		return fmt.Errorf("Failed to create new bucket, err: %s", err)
 	}
 
-	// upload some default images
-	if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
-		return fmt.Errorf("Failed to upload new image, err: %s", err)
+	// upload some images
+	// path := filepath.Join(wd, "gallery", fname)
+	// nf, err := os.Create(path)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln("coule not get wd: ", err)
 	}
+	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
+	if err != nil {
+		log.Fatalf("failed opening directory: %s", err)
+	}
+	files, err := dir.Readdirnames(-1)
+	if err != nil {
+		log.Fatalf("failed opening directory: %s", err)
+	}
+	dir.Close()
+
+	for _, file := range files {
+		path := filepath.Join(wd, "cmd/testfiles", file)
+		imageName := strings.TrimSuffix(file, filepath.Ext(file))
+
+		if err := minioClient.UploadImage(cliCtx.Context, "testy-mctest-face", imageName, path); err != nil {
+			return fmt.Errorf("Failed to upload new image, err: %s", err)
+		}
+	}
+
+	//objectName := "Blackmore.jpg"
+	//filePath := "cmd/testfiles/Blackmore.jpg"
+	// if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
+	// 	return fmt.Errorf("Failed to upload new image, err: %s", err)
+	// }
 
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
