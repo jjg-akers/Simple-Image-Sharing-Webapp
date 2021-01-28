@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -62,15 +61,9 @@ func (mc *MinIOClient) MakeNewBucket(ctx context.Context) error {
 }
 
 func (mc MinIOClient) UploadImage(ctx context.Context, bucketName string) error {
-	path, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	fmt.Println(path)
-	// Upload the zip file
+
 	objectName := "Blackmore.jpg"
-	filePath := "./testfiles/Blackmore.jpg"
+	filePath := "cmd/testfiles/Blackmore.jpg"
 	contentType := "application/jpg"
 
 	// Upload the zip file with FPutObject
@@ -81,7 +74,7 @@ func (mc MinIOClient) UploadImage(ctx context.Context, bucketName string) error 
 		//log.Fatalln(err)
 	}
 
-	log.Printf("Successfully uploaded %s of size %d\n", objectName, n)
+	log.Printf("Successfully uploaded %s of size %d\n", objectName, n.Size)
 	return nil
 }
 

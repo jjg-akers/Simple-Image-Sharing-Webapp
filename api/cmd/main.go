@@ -95,42 +95,6 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	return nil
 }
 
-// func main() {
-// 	fmt.Println("starting application")
-
-// 	interrupt := make(chan os.Signal, 1)
-// 	signal.Notify(interrupt, os.Interrupt)
-
-// 	//create handler
-// 	// get client
-// 	minioClient, err := remotestorage.NewMinIOClient()
-// 	if err != nil {
-// 		log.Fatalln(err)
-// 	}
-
-// 	//make new bucket
-// 	if err := minioClient.MakeNewBucket(context.Background()); err != nil {
-// 		log.Fatalln(err)
-// 	}
-
-// 	// upload image
-// 	if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
-// 		log.Fatalln(err)
-// 	}
-
-// 	fmt.Println("successfulling made bucket and uploaded image")
-
-// 	indexHandler := &handlers.IndexHandler{
-// 		RemoteStore: minioClient,
-// 	}
-
-// 	wg := sync.WaitGroup{}
-// 	wg.Add(1)
-// 	go startServer(context.Background(), &wg, interrupt, indexHandler)
-// 	wg.Wait()
-
-// }
-
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index http.Handler) {
 
 	// define handler func for "/"

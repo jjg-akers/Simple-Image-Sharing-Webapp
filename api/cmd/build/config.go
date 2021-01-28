@@ -22,5 +22,5 @@ func LoadAppConfig(config *AppConfig) []cli.Flag {
 	flags = append(flags, LoadSQLDBConfig(config.DBConfig)...)
 	flags = append(flags, LoadStorageConfig(config.StorageConfig)...)
 
-	return nil
+	return flags
 }

@@ -14,7 +14,9 @@ import (
 var tpl *template.Template
 
 func init() {
-	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+	// wd, _ := os.Getwd()
+	// log.Println(wd)
+	tpl = template.Must(template.ParseGlob("cmd/templates/*.gohtml"))
 }
 
 type IndexHandler struct {
@@ -34,6 +36,8 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	//fmt.Println("signedURL: ", signedURL)
 
 	//paths := []string{"testfiles/Blackmore.jpg", "testfiles/lightswitch wiring.jpg", "testfiles/test.png"}
 	ps := pathserver{

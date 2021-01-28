@@ -4,8 +4,19 @@ import (
 	"database/sql"
 	"log"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/urfave/cli/v2"
 )
+
+func test(db *sql.DB) {
+	// Prepare statement for inserting data
+	stmtIns, err := db.Prepare("INSERT INTO squareNum VALUES( ?, ? )") // ? = placeholder
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+	}
+	defer stmtIns.Close() // Close the statement when we leave main() / the program terminates
+}
 
 type SQLDBConfig struct {
 	UserName     string
@@ -60,6 +71,7 @@ func LoadSQLDBConfig(config *SQLDBConfig) []cli.Flag {
 func NewSQLDB(config *SQLDBConfig) (*sql.DB, error) {
 
 	dsn := config.UserName + ":" + config.Password + "@tcp(" + config.Host + ":" + config.Port + ")/"
+
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Println("error opening DB: ", err)
