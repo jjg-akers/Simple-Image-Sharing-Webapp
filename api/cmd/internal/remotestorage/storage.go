@@ -1,16 +1,21 @@
 package remotestorage
 
+import (
+	"context"
+	"io"
+)
+
 //Define the interfaces a remote storage implementation must satisfy
 
 type Uploader interface {
-	Upload(bucketName, fileName string) error
+	Upload(ctx context.Context, imageName string, reader io.Reader, size int64) error
 }
 
-type Retriever interface {
-	Retrieve(buckeName, filename string) error
+type Getter interface {
+	Get(ctx context.Context, files []string) ([]string, error)
 }
 
-type UploaderRetriever interface {
+type UploaderGetter interface {
 	Uploader
-	Retriever
+	Getter
 }

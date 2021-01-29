@@ -15,6 +15,7 @@ import (
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/handlers"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
 )
 
 type PhotoShareApp struct {
@@ -94,7 +95,7 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		path := filepath.Join(wd, "cmd/testfiles", file)
 		imageName := strings.TrimSuffix(file, filepath.Ext(file))
 
-		if err := minioClient.UploadImage(cliCtx.Context, "testy-mctest-face", imageName, path); err != nil {
+		if err := minioClient.UploadImageFromFile(cliCtx.Context, "testy-mctest-face", imageName, path); err != nil {
 			return fmt.Errorf("Failed to upload new image, err: %s", err)
 		}
 	}
@@ -109,6 +110,11 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
 		DB:          db,
+		// ImageManager: imagemanager.NewSQLManager(db),
+		ImageManager: &imagemanager.ImageManager{
+			StorageManager: imagemanager.NewMinioManager(minioClient),
+			DBManager:      imagemanager.NewSQLDBManager(db),
+		},
 	}
 
 	interrupt := make(chan os.Signal, 1)

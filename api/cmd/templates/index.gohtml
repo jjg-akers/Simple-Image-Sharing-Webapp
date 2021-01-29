@@ -14,11 +14,32 @@
                 <div>
                 A photo
                     <a href="#">
-                    <img class="img-fluid img-thumbnail" src="{{.}}">
+                    <img src="{{.}}">
                     </a>
                 </div>
-        {{end}}
+            {{end}}
         </main>
+        <hr>
+        <div>
+            <div>
+            <form method="post" enctype="multipart/form-data">
+                <div>
+                    <div>
+                        <span>Upload</span>
+                    </div>
+                <div>
+                    <input type="file" name="nf" aria-describedby="inputGroupFileAddon01" required> 
+                    <label for="inputGroupFile01">Choose file</label>	
+            </div>
+        </div>
+            <div>
+                <div>
+                    <input type="submit">
+                </div>
+            </div>
+            </form>
+            </div>
+        </div>
     </div>
 
 </body>
