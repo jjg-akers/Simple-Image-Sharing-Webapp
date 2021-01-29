@@ -105,8 +105,6 @@ func buildSearchQuery(numerOfArgs int) string {
 
 	sb := strings.Builder{}
 
-	//fmt.Fprintf(&sb, "INSERT INTO photoshare.images (image_name, tag, date_added) VALUES (?, ?, ?);")
-
 	sb.WriteString("SELECT image_name FROM photoshare.images WHERE tag IN(")
 
 	sb.WriteString(strings.Repeat("?,", numerOfArgs-1))
@@ -115,11 +113,3 @@ func buildSearchQuery(numerOfArgs int) string {
 	return sb.String()
 
 }
-
-// CREATE TABLE `photoshare`.`images` (
-//     id int(11) not null primary key auto_increment,
-//     imageName varchar(255) not null,
-//     title varchar(100),
-//     tag varchar(100),
-//     date_added datetime not null
-// ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -43,6 +43,9 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		defer mf.Close()
 
+		tags := r.FormValue("tag")
+		fmt.Println("provided tag: ", tags)
+
 		//get filename
 
 		//create hash for filename
@@ -59,7 +62,7 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		im := &imagemanager.Image{
 			Name:      fileName,
 			File:      mf,
-			Tag:       "test_tage",
+			Tag:       tags,
 			Size:      fh.Size,
 			DateAdded: time.Now(),
 		}

@@ -106,11 +106,12 @@
             <hr>
             <div>
                 <form action="/search" method="get">
-                    <label for="tag">Tag:</label>
+                    <label for="tag">Filter by Tag:</label>
                     <input type="text" id="tag" name="tag"><br><br>
                     <button type="submit">Submit</button>
                 </form>
             <div>
+            <br>
 
             <div>
                 <form method="post" enctype="multipart/form-data">
@@ -120,7 +121,10 @@
                         </div>
                     <div>
                         <input type="file" name="nf" aria-describedby="inputGroupFileAddon01" required> 
-                        <label for="inputGroupFile01">Choose file</label>	
+                        <label for="inputGroupFile01"></label>
+                        <br>
+                        <input type="text" name="tag" name="tag" id="uploadtag" required> 
+                        <label for="tag">Add Tag</label>	
                     </div>
         
                     <div>
