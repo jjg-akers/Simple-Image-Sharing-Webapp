@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha1"
 	"database/sql"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -41,11 +44,20 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer mf.Close()
 
 		//get filename
-		fmt.Println("filename: ", fh.Filename)
+
+		//create hash for filename
+		ext := path.Ext(fh.Filename)
+		fileHash := sha1.New()
+		io.Copy(fileHash, mf)
+		mf.Seek(0, 0)
+
+		fileName := fmt.Sprintf("%x", fileHash.Sum(nil)) + ext
+
+		fmt.Println("filename: ", fileName)
 
 		//create image
 		im := &imagemanager.Image{
-			Name:      fh.Filename,
+			Name:      fileName,
 			File:      mf,
 			Tag:       "test_tage",
 			Size:      fh.Size,
@@ -53,41 +65,14 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//attempt upload
-
 		if err := h.ImageManager.Upload(r.Context(), im); err != nil {
 			fmt.Println("index handler failed upload: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		//attempt sql insert
-		// err = h.ImageManager.Upload(r.Context(), fh.Filename, "test_tag")
-		// if err != nil {
-		// 	fmt.Println("index handler err uploading: ", err)
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	return
-		// } else {
-		// 	fmt.Println("successful upload")
-		// }
-
-		//try to upload it
-		//h.RemoteStore.UploadImage(r.Context(), "testy-mctest-face", fh.Filename)
-		// contentType := "application/jpg"
-		// info, err := h.RemoteStore.Client.PutObject(r.Context(), "testy-mctest-face", fh.Filename, mf, fh.Size, minio.PutObjectOptions{ContentType: contentType})
-		// if err != nil {
-		// 	fmt.Println("failed to put file: ", err)
-		// }
-
-		// fmt.Printf("succesffully put file. location: %s, size: %d\n", info.Location, info.Size)
-
-		//w.WriteHeader(http.StatusCreated)
-
 		http.Redirect(w, r, "/", http.StatusSeeOther)
-		//tpl.ExecuteTemplate(w, "index.gohtml", "")
-		//return
-		// contentType := "application/jpg"
-
-		// n, err := mc.Client.FPutObject(ctx, bucketName, imageName, filePath, minio.PutObjectOptions{ContentType: contentType})
+		return
 	}
 
 	fmt.Println("method GET")

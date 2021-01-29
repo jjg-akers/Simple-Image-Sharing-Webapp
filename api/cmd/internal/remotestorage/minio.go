@@ -18,13 +18,13 @@ type MinIOClient struct {
 
 func (mc *MinIOClient) Upload(ctx context.Context, imageName string, reader io.Reader, size int64) error {
 	contentType := "application/jpg"
-	info, err := mc.Client.PutObject(ctx, "testy-mctest-face", imageName, reader, size, minio.PutObjectOptions{ContentType: contentType})
+	_, err := mc.Client.PutObject(ctx, "testy-mctest-face", imageName, reader, size, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		fmt.Println("failed to put file: ", err)
 		return err
 	}
 
-	fmt.Printf("succesffully put file. location: %s, size: %d\n", info.Location, info.Size)
+	//fmt.Printf("succesffully put file. location: %s, size: %d\n", info.Location, info.Size)
 	return nil
 }
 

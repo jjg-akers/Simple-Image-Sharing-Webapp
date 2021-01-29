@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gorilla/schema"
 	"github.com/urfave/cli/v2"
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
@@ -106,15 +107,22 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	// 	return fmt.Errorf("Failed to upload new image, err: %s", err)
 	// }
 
+	imager := &imagemanager.ImageManager{
+		StorageManager: imagemanager.NewMinioManager(minioClient),
+		DBManager:      imagemanager.NewSQLDBManager(db),
+	}
+
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
 		DB:          db,
 		// ImageManager: imagemanager.NewSQLManager(db),
-		ImageManager: &imagemanager.ImageManager{
-			StorageManager: imagemanager.NewMinioManager(minioClient),
-			DBManager:      imagemanager.NewSQLDBManager(db),
-		},
+		ImageManager: imager,
+	}
+
+	searchHandler := &handlers.SearchHandler{
+		ImageManager: imager,
+		Decoder:      schema.NewDecoder(),
 	}
 
 	interrupt := make(chan os.Signal, 1)
@@ -122,18 +130,20 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go startServer(cliCtx.Context, &wg, interrupt, indexHandler)
+	go startServer(cliCtx.Context, &wg, interrupt, indexHandler, searchHandler)
 	wg.Wait()
 
 	return nil
 }
 
-func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index http.Handler) {
+func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search http.Handler) {
 
 	// define handler func for "/"
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 
 	http.Handle("/testfiles/", http.StripPrefix("/testfiles", http.FileServer(http.Dir("testfiles"))))
+
+	http.Handle("/search", search)
 
 	http.Handle("/", index)
 	// build.Build()
