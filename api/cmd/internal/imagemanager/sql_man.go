@@ -3,6 +3,7 @@ package imagemanager
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/db"
 )
+
+var ErrNotFound = errors.New("No images found in db for given tag")
 
 // runtime validation
 var _ DBImageManager = &SQLDBManager{}
@@ -26,12 +29,9 @@ func NewSQLDBManager(db *sql.DB) *SQLDBManager {
 	}
 }
 
-//	Search(ctx context.Context, tags []string) ([]string, error)
-
 //Search queries the DB for given tags
 func (m *SQLDBManager) Search(ctx context.Context, tags []string) ([]string, error) {
 	//select filename from DB where tag in(....)
-
 	//build query
 	query := buildSearchQuery(len(tags))
 
@@ -42,17 +42,16 @@ func (m *SQLDBManager) Search(ctx context.Context, tags []string) ([]string, err
 		return nil, err
 	}
 
-	//query := fmt.Sprintf("SELECT `image_name` FROM `photoshare`.`images` WHERE `tag` IN(?)")
-
-	rows, err := m.DB.QueryContext(ctx, query, args)
+	rows, err := m.DB.QueryContext(ctx, query, args.Params...)
 	if err != nil {
 		return nil, fmt.Errorf("could not query db: %s", err)
 	}
 
 	defer rows.Close()
 
-	toReturn := make([]string, len(tags))
+	toReturn := []string{}
 
+	//i := 0
 	for rows.Next() {
 		var (
 			fname string
@@ -64,6 +63,13 @@ func (m *SQLDBManager) Search(ctx context.Context, tags []string) ([]string, err
 		}
 
 		toReturn = append(toReturn, fname)
+		//toReturn[i] = fname
+		//i++
+	}
+
+	if len(toReturn) == 0 {
+		log.Println("no results")
+		return nil, ErrNotFound
 	}
 
 	return toReturn, nil
