@@ -2,20 +2,32 @@ package imagemanager
 
 import (
 	"context"
+	"errors"
 )
 
-type Searcher interface {
-	Search(ctx context.Context, tags []string) ([]string, error)
-}
+var ErrNotFound = errors.New("No images found in db for given tag")
+
+// type Searcher interface {
+// 	Search(ctx context.Context, tags []string) ([]*Image, error)
+// }
 
 type Uploader interface {
 	// Upload(ctx context.Context, imageName, tag string) error
-	Upload(ctx context.Context, image *Image) error
+	Upload(ctx context.Context, image *ImageV1) error
 }
 
-type SearcherUploader interface {
-	Searcher
+// type SearcherUploader interface {
+// 	Searcher
+// 	Uploader
+// }
+
+type Retriever interface {
+	Retrieve(ctx context.Context, tags []string) ([]*ImageV1, error)
+}
+
+type UploaderRetriever interface {
 	Uploader
+	Retriever
 }
 
 // func (mc MinIOClient) UploadImage(ctx context.Context, bucketName, imageName, filePath string) error {

@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -28,21 +30,46 @@ func (mc *MinIOClient) Upload(ctx context.Context, imageName string, reader io.R
 	return nil
 }
 
-func (mc *MinIOClient) Get(ctx context.Context, files []string) ([]string, error) {
+func (mc *MinIOClient) Get(ctx context.Context, file string) (*url.URL, error) {
+
+	signedURL, err := mc.NewPresignedGet(ctx, file)
+	if err != nil {
+		return nil, fmt.Errorf("error getting signed url: %s", err)
+	}
+
+	return signedURL, nil
+}
+
+func (mc *MinIOClient) GetMulti(ctx context.Context, files []string) ([]string, error) {
 
 	paths := make([]string, len(files))
 
-	for i, file := range files {
-		//imageName := strings.TrimSuffix(file, filepath.Ext(file))
-		signedURL, err := mc.NewPresignedGet(ctx, file)
-		//fmt.Println("url: ", signedURL)
-		if err != nil {
-			return nil, fmt.Errorf("error getting signed url: %s", err)
-		}
+	g, ctx := errgroup.WithContext(ctx)
 
-		paths[i] = signedURL.String()
+	for i, file := range files {
+		i, file := i, file
+		g.Go(func() error {
+
+			signedURL, err := mc.NewPresignedGet(ctx, file)
+			//fmt.Println("url: ", signedURL)
+			if err != nil {
+				return fmt.Errorf("error getting signed url: %s", err)
+			}
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				paths[i] = signedURL.String()
+			}
+
+			return nil
+		})
 	}
-	//return mc.NewPresignedGet(ctx, filename)
+
+	if g.Wait() != nil {
+		return nil, g.Wait()
+	}
 
 	return paths, nil
 }

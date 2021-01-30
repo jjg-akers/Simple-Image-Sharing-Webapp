@@ -84,7 +84,7 @@
         <div id='wrapper'>
             <div id='newContainer'>
                 <form action="/" method="GET">
-                    <input type="submit" name="home" value="HOME">
+                    <button type="submit">HOME</button>
                 </form>
             </div>
 
@@ -106,11 +106,12 @@
             <hr>
             <div>
                 <form action="/search" method="get">
-                    <label for="tag">Tag:</label>
+                    <label for="tag">Filter by Tag:</label>
                     <input type="text" id="tag" name="tag"><br><br>
                     <button type="submit">Submit</button>
                 </form>
             <div>
+            <br>
 
             <div>
                 <form method="post" enctype="multipart/form-data">
@@ -120,7 +121,16 @@
                         </div>
                     <div>
                         <input type="file" name="nf" aria-describedby="inputGroupFileAddon01" required> 
-                        <label for="inputGroupFile01">Choose file</label>	
+                        <label for="inputGroupFile01"></label>
+                        <br>
+                        <input type="text" name="tag" name="tag" id="uploadtag" required> 
+                        <label for="tag">Add Tag</label>
+                        <br>
+                        <input type="text" name="title" name="title" id="uploadtitle" required> 
+                        <label for="tag">Image Title</label>
+                        <br>
+                        <input type="text" name="description" name="description" id="uploaddescription"> 
+                        <label for="tag">Image Description</label>
                     </div>
         
                     <div>

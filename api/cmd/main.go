@@ -17,6 +17,8 @@ import (
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/handlers"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 )
 
 type PhotoShareApp struct {
@@ -101,28 +103,23 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		}
 	}
 
-	//objectName := "Blackmore.jpg"
-	//filePath := "cmd/testfiles/Blackmore.jpg"
-	// if err := minioClient.UploadImage(context.Background(), "mytestbucket"); err != nil {
-	// 	return fmt.Errorf("Failed to upload new image, err: %s", err)
-	// }
-
-	imager := &imagemanager.ImageManager{
-		StorageManager: imagemanager.NewMinioManager(minioClient),
-		DBManager:      imagemanager.NewSQLDBManager(db),
+	imager := &imagemanager.SQLMinIOImpl{
+		Meta:    meta.NewSQLDBManager(db),
+		Storage: imagestorage.NewMinioStorage(minioClient),
 	}
 
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
-		DB:          db,
+		// DB:          db,
+		Decoder: schema.NewDecoder(),
 		// ImageManager: imagemanager.NewSQLManager(db),
-		ImageManager: imager,
+		ImageHandler: imager,
 	}
 
 	searchHandler := &handlers.SearchHandler{
-		ImageManager: imager,
-		Decoder:      schema.NewDecoder(),
+		ImageRetriever: imager,
+		Decoder:        schema.NewDecoder(),
 	}
 
 	interrupt := make(chan os.Signal, 1)
@@ -150,8 +147,8 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 
 	// Start server -- listen at localhost, port 8080
 	go func() {
-		fmt.Println("starting server of 8080")
-		log.Fatal(http.ListenAndServe(":8080", nil))
+		fmt.Println("starting server of 80")
+		log.Fatal(http.ListenAndServe(":80", nil))
 	}()
 
 	<-interrupt

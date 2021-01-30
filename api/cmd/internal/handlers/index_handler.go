@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 	"crypto/sha1"
-	"database/sql"
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,7 +15,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/schema"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
 )
 
@@ -26,9 +28,11 @@ func init() {
 }
 
 type IndexHandler struct {
-	RemoteStore  *remotestorage.MinIOClient
-	DB           *sql.DB
-	ImageManager imagemanager.SearcherUploader
+	RemoteStore *remotestorage.MinIOClient
+	// DB           *sql.DB
+	Decoder *schema.Decoder
+	// ImageManager imagemanager.SearcherUploader
+	ImageHandler imagemanager.UploaderRetriever
 }
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,35 +41,44 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("method post")
 
+		// parse submitted file
 		mf, fh, err := r.FormFile("nf")
 		if err != nil {
 			fmt.Println("err reading form: ", err)
 		}
 		defer mf.Close()
 
-		//get filename
+		// parse form fields
+		imageMeta := &meta.Meta{}
+
+		if err = h.Decoder.Decode(imageMeta, r.PostForm); err != nil {
+			log.Println("err decoding post form: ", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		image := &imagemanager.ImageV1{
+			Meta: imageMeta,
+		}
+
+		//fmt.Println("IMAGEVE: ", image)
 
 		//create hash for filename
 		ext := path.Ext(fh.Filename)
 		fileHash := sha1.New()
 		io.Copy(fileHash, mf)
-		mf.Seek(0, 0)
-
 		fileName := fmt.Sprintf("%x", fileHash.Sum(nil)) + ext
 
-		fmt.Println("filename: ", fileName)
+		//reset
+		mf.Seek(0, 0)
 
-		//create image
-		im := &imagemanager.Image{
-			Name:      fileName,
-			File:      mf,
-			Tag:       "test_tage",
-			Size:      fh.Size,
-			DateAdded: time.Now(),
-		}
+		image.File = mf
+		image.Meta.Size = fh.Size
+		image.Meta.FileName = fileName
+		image.Meta.DateAdded = time.Now()
 
 		//attempt upload
-		if err := h.ImageManager.Upload(r.Context(), im); err != nil {
+		if err := h.ImageHandler.Upload(r.Context(), image); err != nil {
 			fmt.Println("index handler failed upload: ", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

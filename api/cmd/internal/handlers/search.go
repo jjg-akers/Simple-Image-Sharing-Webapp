@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -15,8 +16,9 @@ type SearchRequestParams struct {
 }
 
 type SearchHandler struct {
-	ImageManager imagemanager.Searcher
-	Decoder      *schema.Decoder
+	// ImageManager imagemanager.Searcher
+	ImageRetriever imagemanager.Retriever
+	Decoder        *schema.Decoder
 }
 
 func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +40,9 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, err := h.ImageManager.Search(r.Context(), rp.Tag)
+	// get images
+	images, err := h.ImageRetriever.Retrieve(r.Context(), rp.Tag)
+	//urls, err := h.ImageManager.Search(r.Context(), rp.Tag)
 	switch err {
 	case nil:
 	case imagemanager.ErrNotFound:
@@ -49,10 +53,18 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
+	fmt.Println("images from search: ", images)
+
+	p := []string{}
+
+	for _, image := range images {
+		p = append(p, image.URI)
+	}
+
 	type pathserver struct {
 		Paths []string
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tpl.ExecuteTemplate(w, "index.gohtml", pathserver{Paths: urls})
+	tpl.ExecuteTemplate(w, "index.gohtml", pathserver{Paths: p})
 }
