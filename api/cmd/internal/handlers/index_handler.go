@@ -2,18 +2,13 @@ package handlers
 
 import (
 	"context"
-	"crypto/sha1"
 	"fmt"
 	"html/template"
-	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/gorilla/schema"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
@@ -24,7 +19,7 @@ import (
 var tpl *template.Template
 
 func init() {
-	tpl = template.Must(template.ParseGlob("cmd/templates/*.gohtml"))
+	tpl = template.Must(template.ParseGlob("cmd/templates/*.html"))
 }
 
 type IndexHandler struct {
@@ -37,56 +32,56 @@ type IndexHandler struct {
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == http.MethodPost {
+	// if r.Method == http.MethodPost {
 
-		fmt.Println("method post")
+	// 	fmt.Println("method post")
 
-		// parse submitted file
-		mf, fh, err := r.FormFile("nf")
-		if err != nil {
-			fmt.Println("err reading form: ", err)
-		}
-		defer mf.Close()
+	// 	// parse submitted file
+	// 	mf, fh, err := r.FormFile("nf")
+	// 	if err != nil {
+	// 		fmt.Println("err reading form: ", err)
+	// 	}
+	// 	defer mf.Close()
 
-		// parse form fields
-		imageMeta := &meta.Meta{}
+	// 	// parse form fields
+	// 	imageMeta := &meta.Meta{}
 
-		if err = h.Decoder.Decode(imageMeta, r.PostForm); err != nil {
-			log.Println("err decoding post form: ", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+	// 	if err = h.Decoder.Decode(imageMeta, r.PostForm); err != nil {
+	// 		log.Println("err decoding post form: ", err)
+	// 		w.WriteHeader(http.StatusBadRequest)
+	// 		return
+	// 	}
 
-		image := &imagemanager.ImageV1{
-			Meta: imageMeta,
-		}
+	// 	image := &imagemanager.ImageV1{
+	// 		Meta: imageMeta,
+	// 	}
 
-		//fmt.Println("IMAGEVE: ", image)
+	// 	//fmt.Println("IMAGEVE: ", image)
 
-		//create hash for filename
-		ext := path.Ext(fh.Filename)
-		fileHash := sha1.New()
-		io.Copy(fileHash, mf)
-		fileName := fmt.Sprintf("%x", fileHash.Sum(nil)) + ext
+	// 	//create hash for filename
+	// 	ext := path.Ext(fh.Filename)
+	// 	fileHash := sha1.New()
+	// 	io.Copy(fileHash, mf)
+	// 	fileName := fmt.Sprintf("%x", fileHash.Sum(nil)) + ext
 
-		//reset
-		mf.Seek(0, 0)
+	// 	//reset
+	// 	mf.Seek(0, 0)
 
-		image.File = mf
-		image.Meta.Size = fh.Size
-		image.Meta.FileName = fileName
-		image.Meta.DateAdded = time.Now()
+	// 	image.File = mf
+	// 	image.Meta.Size = fh.Size
+	// 	image.Meta.FileName = fileName
+	// 	image.Meta.DateAdded = time.Now()
 
-		//attempt upload
-		if err := h.ImageHandler.Upload(r.Context(), image); err != nil {
-			fmt.Println("index handler failed upload: ", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	// 	//attempt upload
+	// 	if err := h.ImageHandler.Upload(r.Context(), image); err != nil {
+	// 		fmt.Println("index handler failed upload: ", err)
+	// 		w.WriteHeader(http.StatusInternalServerError)
+	// 		return
+	// 	}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
+	// 	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// 	return
+	// }
 
 	fmt.Println("method GET")
 
@@ -95,21 +90,21 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// for now just throw sthe default images up
-	paths, err := getDefaultImages(r.Context(), h.RemoteStore)
+	images, err := getDefaultImages(r.Context(), h.RemoteStore)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	// load the paths to be served
-	ps := pathserver{
-		Paths: paths,
-	}
+	// ps := pathserver{
+	// 	Paths: paths,
+	// }
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Type", "text/html")
 	//w.WriteHeader(http.StatusOK)
-	tpl.ExecuteTemplate(w, "index.gohtml", ps)
+	tpl.ExecuteTemplate(w, "index.html", images)
 }
 
-func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([]*url.URL, error) {
+func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([]*imagemanager.ImageV1, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("coule not get wd: ", err)
@@ -124,7 +119,11 @@ func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([
 	}
 	dir.Close()
 
-	paths := make([]*url.URL, len(files))
+	// imageMeta := &meta.Meta{}
+
+	images := make([]*imagemanager.ImageV1, len(files))
+
+	// paths := make([]*url.URL, len(files))
 
 	for i, file := range files {
 		imageName := strings.TrimSuffix(file, filepath.Ext(file))
@@ -134,8 +133,21 @@ func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([
 			return nil, fmt.Errorf("error getting signed url: %s", err)
 		}
 
-		paths[i] = signedURL
+		imageMeta := &meta.Meta{
+			Tag:         "default",
+			Title:       imageName,
+			Description: "stuff about the photo",
+		}
+
+		image := &imagemanager.ImageV1{
+			Meta: imageMeta,
+			URI:  signedURL.String(),
+		}
+
+		images[i] = image
+		// paths[i] = signedURL
 	}
 
-	return paths, nil
+	// return paths, nil
+	return images, nil
 }

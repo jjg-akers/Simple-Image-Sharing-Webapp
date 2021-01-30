@@ -46,8 +46,8 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 	case imagemanager.ErrNotFound:
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		tpl.ExecuteTemplate(w, "index.gohtml", "")
+		w.Header().Set("Content-Type", "text/html")
+		tpl.ExecuteTemplate(w, "index.html", "")
 	default:
 		log.Println("search handler failed url search: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,16 +55,16 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("images from search: ", images)
 
-	p := []string{}
+	// p := []string{}
 
-	for _, image := range images {
-		p = append(p, image.URI)
-	}
+	// for _, image := range images {
+	// 	p = append(p, image.URI)
+	// }
 
 	type pathserver struct {
 		Paths []string
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tpl.ExecuteTemplate(w, "index.gohtml", pathserver{Paths: p})
+	w.Header().Set("Content-Type", "text/html")
+	tpl.ExecuteTemplate(w, "index.html", images)
 }
