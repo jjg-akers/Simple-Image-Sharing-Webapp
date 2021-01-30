@@ -28,12 +28,11 @@ The wepapp can be viewed at `http://localhost:8080`
 
 ## TODOs ##
 1. Upgrade UI
-2. Add Name, Descriptions to uploads
-3. Handle View All
-4. Implement Search
-5. Delete an image/image(s)
-6. View an individual image
-7. “Permalink” to an individual image
-8. User Input Validation
-9. resize /format - standardize uploaded photos
+2. Handle View All
+3. Implement Search
+4. Delete an image/image(s)
+5. View an individual image
+6. “Permalink” to an individual image
+7. User Input Validation
+8. resize /format - standardize uploaded photos
 

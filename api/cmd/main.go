@@ -122,23 +122,31 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		Decoder:        schema.NewDecoder(),
 	}
 
+	uploadHandler := &handlers.UploadHandler{
+		Decoder:      schema.NewDecoder(),
+		ImageHandler: imager,
+	}
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go startServer(cliCtx.Context, &wg, interrupt, indexHandler, searchHandler)
+	go startServer(cliCtx.Context, &wg, interrupt, indexHandler, searchHandler, uploadHandler)
 	wg.Wait()
 
 	return nil
 }
 
-func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search http.Handler) {
+func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search, upload http.Handler) {
 
 	// define handler func for "/"
 	http.Handle("/favicon.ico", http.NotFoundHandler())
 
-	http.Handle("/testfiles/", http.StripPrefix("/testfiles", http.FileServer(http.Dir("testfiles"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/cmd/static"))))
+
+	//http.Handle("/testfiles", http.StripPrefix("/testfiles", http.FileServer(http.Dir("testfiles"))))
+	http.Handle("/upload", upload)
 
 	http.Handle("/search", search)
 
