@@ -3,6 +3,8 @@ package imagemanager
 import (
 	"context"
 	"errors"
+
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
 )
 
 var ErrNotFound = errors.New("No images found in db for given tag")
@@ -13,7 +15,7 @@ var ErrNotFound = errors.New("No images found in db for given tag")
 
 type Uploader interface {
 	// Upload(ctx context.Context, imageName, tag string) error
-	Upload(ctx context.Context, image *ImageV1) error
+	Upload(ctx context.Context, image *imagestorage.ImageV1) error
 }
 
 // type SearcherUploader interface {
@@ -22,7 +24,7 @@ type Uploader interface {
 // }
 
 type Retriever interface {
-	Retrieve(ctx context.Context, tags []string) ([]*ImageV1, error)
+	Retrieve(ctx context.Context, tags []string) ([]*imagestorage.ImageV1, error)
 }
 
 type UploaderRetriever interface {

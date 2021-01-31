@@ -3,11 +3,12 @@ package imagestorage
 import (
 	"context"
 	"io"
-	"net/url"
+
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 )
 
 type Getter interface {
-	Get(ctx context.Context, filename string) (*url.URL, error)
+	Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1, error)
 }
 
 //tx, image.FileName, image.File, image.Size)

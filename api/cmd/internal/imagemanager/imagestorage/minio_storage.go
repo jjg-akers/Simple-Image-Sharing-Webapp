@@ -4,10 +4,20 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
+	"sync/atomic"
 
+	//"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
+
+	"golang.org/x/sync/errgroup"
 )
+
+type ImageV1 struct {
+	Meta *meta.Meta
+	URI  string
+	File io.Reader
+}
 
 var _ GetterSetter = &MinioStorage{}
 
@@ -25,15 +35,79 @@ func NewMinioStorage(client *remotestorage.MinIOClient) *MinioStorage {
 }
 
 //Get gets a single signeduri
-func (mm *MinioStorage) Get(ctx context.Context, filename string) (*url.URL, error) {
+// func (mm *MinioStorage) Get(ctx context.Context, filename string) (*url.URL, error) {
 
-	url, err := mm.Client.Get(ctx, filename)
-	if err != nil {
-		fmt.Println("err Getting urls from minio image getter")
-		return nil, err
+// 	url, err := mm.Client.Get(ctx, filename)
+// 	if err != nil {
+// 		fmt.Println("err Getting urls from minio image getter")
+// 		return nil, err
+// 	}
+
+// 	return url, nil
+// }
+
+//Get gets a []Images
+// Get(ctx context.Context, metas []*meta.Meta) (*[]ImageV1, error)
+
+func (mm *MinioStorage) Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1, error) {
+
+	// url, err := mm.Client.Get(ctx, filename)
+	// if err != nil {
+	// 	fmt.Println("err Getting urls from minio image getter")
+	// 	return nil, err
+	// }
+
+	// return url, nil
+
+	// get signed urls
+	g, ctx := errgroup.WithContext(ctx)
+	imageChan := make(chan *ImageV1)
+
+	done := int32(len(metas))
+	for _, meta := range metas {
+		meta := meta
+		g.Go(func() error {
+
+			// use defer func to close chan after last out
+			defer func() {
+				if atomic.AddInt32(&done, -1) == 0 {
+					close(imageChan)
+				}
+			}()
+
+			signedURI, err := mm.Client.Get(ctx, meta.FileName)
+			if err != nil {
+				return fmt.Errorf("Failed to get uri for file %s, err: %s", meta.FileName, err)
+			}
+
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+
+				image := &ImageV1{
+					Meta: meta,
+					URI:  signedURI.String(),
+				}
+
+				imageChan <- image
+			}
+			return nil
+		})
 	}
 
-	return url, nil
+	imagesToReturn := make([]*ImageV1, len(metas))
+
+	g.Go(func() error {
+		i := 0
+		for im := range imageChan {
+			imagesToReturn[i] = im
+			i++
+		}
+		return nil
+	})
+
+	return imagesToReturn, g.Wait()
 }
 
 //Set saves a image

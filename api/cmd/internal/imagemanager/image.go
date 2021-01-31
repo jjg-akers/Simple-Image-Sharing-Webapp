@@ -1,11 +1,5 @@
 package imagemanager
 
-import (
-	"io"
-
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
-)
-
 // type Image struct {
 // 	FileName    string
 // 	File        io.Reader
@@ -16,11 +10,11 @@ import (
 // 	DateAdded   time.Time
 // }
 
-type ImageV1 struct {
-	Meta *meta.Meta
-	URI  string
-	File io.Reader
-}
+// type ImageV1 struct {
+// 	Meta *meta.Meta
+// 	URI  string
+// 	File io.Reader
+// }
 
 // FileName    string
 // Tag         string `schema:"tag"`

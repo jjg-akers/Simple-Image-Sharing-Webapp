@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/schema"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 )
 
@@ -43,7 +44,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	image := &imagemanager.ImageV1{
+	image := &imagestorage.ImageV1{
 		Meta: imageMeta,
 	}
 

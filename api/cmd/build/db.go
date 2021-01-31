@@ -9,15 +9,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func test(db *sql.DB) {
-	// Prepare statement for inserting data
-	stmtIns, err := db.Prepare("INSERT INTO squareNum VALUES( ?, ? )") // ? = placeholder
-	if err != nil {
-		panic(err.Error())
-	}
-	defer stmtIns.Close() // Close the statement when we leave main() / the program terminates
-}
-
 type SQLDBConfig struct {
 	UserName     string
 	Password     string

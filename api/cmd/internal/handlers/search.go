@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -53,7 +52,7 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	fmt.Println("images from search: ", images)
+	//fmt.Println("images from search: ", images)
 
 	// p := []string{}
 
