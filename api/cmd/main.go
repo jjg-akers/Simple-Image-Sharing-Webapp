@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gorilla/schema"
 	"github.com/urfave/cli/v2"
@@ -74,35 +75,6 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		return fmt.Errorf("Failed to build Minio client, err: %s", err)
 	}
 
-	// initialize a bucket and put some random photos in it
-	if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
-		return fmt.Errorf("Failed to create new bucket, err: %s", err)
-	}
-
-	// upload some default images
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln("coule not get wd: ", err)
-	}
-	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
-	if err != nil {
-		log.Fatalf("failed opening directory: %s", err)
-	}
-	files, err := dir.Readdirnames(-1)
-	if err != nil {
-		log.Fatalf("failed opening directory: %s", err)
-	}
-	dir.Close()
-
-	for _, file := range files {
-		path := filepath.Join(wd, "cmd/testfiles", file)
-		imageName := strings.TrimSuffix(file, filepath.Ext(file))
-
-		if err := minioClient.UploadImageFromFile(cliCtx.Context, "testy-mctest-face", imageName, path); err != nil {
-			return fmt.Errorf("Failed to upload new image, err: %s", err)
-		}
-	}
-
 	imager := &imagemanager.SQLMinIOImpl{
 		Meta:    meta.NewSQLDBManager(db),
 		Storage: imagestorage.NewMinioStorage(minioClient),
@@ -111,10 +83,10 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
-		// DB:          db,
-		Decoder: schema.NewDecoder(),
+		DB:          db,
+		//Decoder:     schema.NewDecoder(),
 		// ImageManager: imagemanager.NewSQLManager(db),
-		ImageHandler: imager,
+		ImageGetter: imagestorage.NewMinioStorage(minioClient),
 	}
 
 	searchHandler := &handlers.SearchHandler{
@@ -125,6 +97,15 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	uploadHandler := &handlers.UploadHandler{
 		Decoder:      schema.NewDecoder(),
 		ImageHandler: imager,
+	}
+
+	// initialize a bucket and put some random photos in it
+	if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
+		return fmt.Errorf("Failed to create new bucket, err: %s", err)
+	}
+
+	if err := uploadStockImages(cliCtx.Context, imager); err != nil {
+		return fmt.Errorf("failed to upload stock images")
 	}
 
 	interrupt := make(chan os.Signal, 1)
@@ -161,4 +142,84 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 
 	<-interrupt
 	wg.Done()
+}
+
+func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader) error {
+	// upload some default images
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln("coule not get wd: ", err)
+	}
+	// dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
+	// if err != nil {
+	// 	log.Fatalf("failed opening directory: %s", err)
+	// }
+	// files, err := dir.Readdirnames(-1)
+	// if err != nil {
+	// 	log.Fatalf("failed opening directory: %s", err)
+	// }
+	// dir.Close()
+
+	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
+	if err != nil {
+		log.Fatalf("failed opening directory: %s", err)
+	}
+
+	fileInfo, err := dir.Readdir(-1)
+	if err != nil {
+		log.Fatalf("failed reading directory: %s", err)
+	}
+
+	defer dir.Close()
+
+	// info[0]
+
+	//imageUploader.Upload()
+
+	for _, file := range fileInfo {
+		fileName := file.Name()
+
+		var tag string
+
+		switch {
+		case strings.Contains(fileName, "cat"):
+			tag = "cat food"
+		case strings.Contains(fileName, "dog"):
+			tag = "dog food"
+		default:
+			tag = "unknown"
+		}
+
+		fileReader, err := os.Open(filepath.Join(wd, "cmd/testfiles", fileName))
+		if err != nil {
+			log.Println("failed to open file. err: ", err)
+			return err
+		}
+
+		image := &imagestorage.ImageV1{
+			Meta: &meta.Meta{
+				FileName:    fileName,
+				Tag:         tag,
+				Title:       fileName,
+				Description: "Your mom goes to college",
+				Size:        file.Size(),
+				DateAdded:   time.Now(),
+			},
+			File: fileReader,
+		}
+
+		if err = imageUploader.Upload(ctx, image); err != nil {
+			log.Println("failed uploading image. err: ", err)
+			return err
+		}
+
+		// path := filepath.Join(wd, "cmd/testfiles", file)
+		// imageName := strings.TrimSuffix(file, filepath.Ext(file))
+
+		// if err := client.UploadImageFromFile(ctx, "testy-mctest-face", imageName, path); err != nil {
+		// 	return fmt.Errorf("Failed to upload new image, err: %s", err)
+		// }
+	}
+
+	return nil
 }

@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/gorilla/schema"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
 )
@@ -24,10 +25,11 @@ func init() {
 
 type IndexHandler struct {
 	RemoteStore *remotestorage.MinIOClient
-	// DB           *sql.DB
-	Decoder *schema.Decoder
+	DB          *sql.DB
+	Decoder     *schema.Decoder
+	ImageGetter imagestorage.Getter
 	// ImageManager imagemanager.SearcherUploader
-	ImageHandler imagemanager.UploaderRetriever
+	//ImageHandler imagemanager.UploaderRetriever
 }
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -85,29 +87,34 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("method GET")
 
-	type pathserver struct {
-		Paths []*url.URL
+	// type pathserver struct {
+	// 	Paths []*url.URL
+	// }
+
+	// for now just throw the default images up
+	// images, err := getDefaultImages(r.Context(), h.RemoteStore)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// }
+
+	images, err := getInitialImages(r.Context(), 10, h.DB, h.ImageGetter)
+	if err != nil {
+		log.Println("failed getting initial images. err: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	// for now just throw sthe default images up
-	images, err := getDefaultImages(r.Context(), h.RemoteStore)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	// load the paths to be served
-	// ps := pathserver{
-	// 	Paths: paths,
-	// }
+	//fmt.Println("got images")
 
 	w.Header().Set("Content-Type", "text/html")
 	//w.WriteHeader(http.StatusOK)
 	tpl.ExecuteTemplate(w, "index.html", images)
 }
 
-func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([]*imagemanager.ImageV1, error) {
+func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([]*imagestorage.ImageV1, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("coule not get wd: ", err)
+		return nil, fmt.Errorf("coule not get wd: %s", err)
 	}
 	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
 	if err != nil {
@@ -121,7 +128,7 @@ func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([
 
 	// imageMeta := &meta.Meta{}
 
-	images := make([]*imagemanager.ImageV1, len(files))
+	images := make([]*imagestorage.ImageV1, len(files))
 
 	// paths := make([]*url.URL, len(files))
 
@@ -139,15 +146,57 @@ func getDefaultImages(ctx context.Context, client *remotestorage.MinIOClient) ([
 			Description: "stuff about the photo",
 		}
 
-		image := &imagemanager.ImageV1{
+		image := &imagestorage.ImageV1{
 			Meta: imageMeta,
 			URI:  signedURL.String(),
 		}
 
 		images[i] = image
-		// paths[i] = signedURL
 	}
 
 	// return paths, nil
 	return images, nil
+}
+
+func getInitialImages(ctx context.Context, n int, db *sql.DB, imageGetter imagestorage.Getter) ([]*imagestorage.ImageV1, error) {
+	meta, err := selectRandom(ctx, 10, db)
+	if err != nil {
+		return nil, err
+	}
+
+	images, err := imageGetter.Get(ctx, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+func selectRandom(ctx context.Context, n int, db *sql.DB) ([]*meta.Meta, error) {
+
+	query := fmt.Sprintf(`SELECT image_name, tag, title, description 
+	FROM photoshare.images AS r1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM photoshare.images)) AS id) AS r2 
+	WHERE r1.id >= r2.id ORDER BY r1.id ASC LIMIT 6;`)
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("could not query db: %s", err)
+	}
+
+	defer rows.Close()
+
+	var toReturn []*meta.Meta
+
+	for rows.Next() {
+		m := meta.Meta{}
+
+		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning results: %s", err)
+		}
+
+		toReturn = append(toReturn, &m)
+	}
+
+	return toReturn, nil
 }

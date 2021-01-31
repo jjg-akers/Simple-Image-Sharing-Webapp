@@ -35,4 +35,5 @@ The wepapp can be viewed at `http://localhost:8080`
 6. “Permalink” to an individual image
 7. User Input Validation
 8. resize /format - standardize uploaded photos
+9. return uploaded and related photos on upload
 

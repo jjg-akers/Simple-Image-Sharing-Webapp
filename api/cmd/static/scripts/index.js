@@ -11,4 +11,19 @@ window.onload=function(){
     // $(".close-button").click(function() {
     //     $(".modal").toggleClass("show-modal", "slow");
     // });
+    $('.hover-scale').hover(function() {
+        $(this).addClass('transition');
+    
+    }, function() {
+        $(this).removeClass('transition');
+        // $(this).addClass('card-click');
+    });
+
+    $('.card-inner').click(function() {
+        $(this).toggleClass('card-click');
+        // $(this).addClass('transition');
+    });
+    // , function() {
+    //     $(this).removeClass('transition');
+    // });
 }

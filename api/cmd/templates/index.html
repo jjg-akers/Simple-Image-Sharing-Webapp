@@ -4,87 +4,6 @@
     <meta charset="UTF-8">
     <title>THIS IS A TEST</title>
     {{template "head"}}
-    <!-- <link rel="stylesheet" type="text/css" href="/static/css/index.css"> -->
-    <!-- <style>
-        body{
-    text-align: center;
-}
-.grid-container {
-  display: grid;
-  /* grid-template-columns: auto auto auto auto; */
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  background-color: #2196F3;
-  padding: 10px;
-}
-.grid-item {
-  /* min-width: 50px;
-  min-height: 40px;
-  background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  margin: 2px;
-  font-size: 30px;
-  text-align: center; */
-  border: 2px solid #e7e7e7;
- 
-    border-radius: 4px;
- 
-padding: .5rem;
-}
-
-
-.buttonContainer {
-  display: grid;
-  justify-content: space-evenly;
-  /* grid-template-columns: auto auto auto auto; */
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-gap: 1rem;
-
-  /* padding-top: 10px;
-  margin-left: 20px;
-  margin-right: 20px; */
-}
-#wrapper {
-    min-width: 500px;
-    max-width: 750px;
-    margin: auto;
-    text-align: center;
-    width: 75%;
-}
-#newContainer {
-    display: grid;
-    grid-template-columns: auto;
-    padding: 10px;
-}
-#newContainer form {
-    font-size: 30px;
-}
-.slideBtn{
-    width: 100px;
-    background-color: rgb(209, 209, 202);
-    font-size: 30px;
-    margin-left: 10px;
-    margin-right: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.slideBtn:hover {
-    background-color: #1a8096;
-}
-input[type=submit] {
-    background-color: rgb(67, 150, 69);
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 20px;
-}
-
-input[type=submit]:hover {
-    background-color:red;
-}
-    </style> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <!-- <script src='/scripts/javascript.js'></script> -->
 </head>
@@ -112,7 +31,6 @@ input[type=submit]:hover {
             <hr>
             <div id="search-form">
                 <form action="/search" method="get">
-                    <label for="tag">Filter by Tag:</label>
                     <input type="text" id="tag" name="tag" placeholder="Search by tag..."><input type="submit" value="Submit">
                 </form>
             </div>

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/schema"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 )
 
@@ -43,11 +44,9 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	image := &imagemanager.ImageV1{
+	image := &imagestorage.ImageV1{
 		Meta: imageMeta,
 	}
-
-	//fmt.Println("IMAGEVE: ", image)
 
 	//create hash for filename
 	ext := path.Ext(fh.Filename)
@@ -70,6 +69,14 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	relatedImages, err := h.ImageHandler.Retrieve(r.Context(), []string{imageMeta.Tag})
+	if err != nil {
+		w.Header().Set("Content-Type", "text/html")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	tpl.ExecuteTemplate(w, "index.html", relatedImages)
+	//http.Redirect(w, r, "/", http.StatusSeeOther)
 	return
 }
