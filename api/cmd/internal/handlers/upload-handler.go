@@ -48,8 +48,6 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Meta: imageMeta,
 	}
 
-	//fmt.Println("IMAGEVE: ", image)
-
 	//create hash for filename
 	ext := path.Ext(fh.Filename)
 	fileHash := sha1.New()
@@ -71,6 +69,14 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	relatedImages, err := h.ImageHandler.Retrieve(r.Context(), []string{imageMeta.Tag})
+	if err != nil {
+		w.Header().Set("Content-Type", "text/html")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	tpl.ExecuteTemplate(w, "index.html", relatedImages)
+	//http.Redirect(w, r, "/", http.StatusSeeOther)
 	return
 }
