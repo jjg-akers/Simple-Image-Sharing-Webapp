@@ -6,12 +6,12 @@ import (
 )
 
 type Meta struct {
-	FileName    string
-	Tag         string `schema:"tag"`
-	Title       string `schema:"title,required`
-	Description string `schema:"description,required"`
-	Size        int64
-	DateAdded   time.Time
+	FileName    string    `json:"FileName"`
+	Tag         string    `schema:"tag" json:"Tag"`
+	Title       string    `schema:"title,required" json:"Title"`
+	Description string    `schema:"description,required" json:"Description"`
+	Size        int64     `json:"Size"`
+	DateAdded   time.Time `json:"DateAdded"`
 }
 
 type Getter interface {

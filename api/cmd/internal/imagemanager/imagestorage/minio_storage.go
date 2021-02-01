@@ -14,9 +14,9 @@ import (
 )
 
 type ImageV1 struct {
-	Meta *meta.Meta
-	URI  string
-	File io.Reader
+	Meta *meta.Meta `json:"Meta"`
+	URI  string     `json:"url"`
+	File io.Reader  `json:"File"`
 }
 
 var _ GetterSetter = &MinioStorage{}
@@ -34,31 +34,8 @@ func NewMinioStorage(client *remotestorage.MinIOClient) *MinioStorage {
 
 }
 
-//Get gets a single signeduri
-// func (mm *MinioStorage) Get(ctx context.Context, filename string) (*url.URL, error) {
-
-// 	url, err := mm.Client.Get(ctx, filename)
-// 	if err != nil {
-// 		fmt.Println("err Getting urls from minio image getter")
-// 		return nil, err
-// 	}
-
-// 	return url, nil
-// }
-
 //Get gets a []Images
-// Get(ctx context.Context, metas []*meta.Meta) (*[]ImageV1, error)
-
 func (mm *MinioStorage) Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1, error) {
-
-	// url, err := mm.Client.Get(ctx, filename)
-	// if err != nil {
-	// 	fmt.Println("err Getting urls from minio image getter")
-	// 	return nil, err
-	// }
-
-	// return url, nil
-
 	// get signed urls
 	g, ctx := errgroup.WithContext(ctx)
 	imageChan := make(chan *ImageV1)
@@ -88,6 +65,7 @@ func (mm *MinioStorage) Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1
 				image := &ImageV1{
 					Meta: meta,
 					URI:  signedURI.String(),
+					// URI: signedURI,
 				}
 
 				imageChan <- image

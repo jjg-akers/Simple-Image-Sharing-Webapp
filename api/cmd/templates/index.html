@@ -3,21 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>THIS IS A TEST</title>
+
     {{template "head"}}
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <!-- <script src='/scripts/javascript.js'></script> -->
 </head>
     <body>
         <div id='wrapper'>
-            <div id='newContainer'>
-                <form action="/" method="GET">
-                    <button type="submit">HOME</button>
-                </form>
+            <div id='header-container'>
+                <div id="search-form" class="header-item">
+                    <form action="/search" method="get">
+                        <input type="text" id="tag-search-val" name="tag" placeholder="Search by tag..."><input type="submit" id="tag-search-btn" value="Submit">
+                    </form>
+                    
+                </div>
+                <div class="header-item" id="reset-btn">
+                    <form action="/" method="GET" >
+                        <!-- <button type="submit">HOME</button> -->
+                        <input type="submit" value="HOME" id="reset-submit">
+                    </form>
+            </div>
+            <span id="invalid"></span>
             </div>
 
+            <hr>
+
+            <br>
+            
             {{if .}}
                 <main>
-                    <div class="grid-container">
+                    <div class="grid-container" id="images-container">
                         {{range .}}
                             <div class="grid-item">
                                 {{template "imagecard" .}}
@@ -29,11 +45,7 @@
             {{end}}
 
             <hr>
-            <div id="search-form">
-                <form action="/search" method="get">
-                    <input type="text" id="tag" name="tag" placeholder="Search by tag..."><input type="submit" value="Submit">
-                </form>
-            </div>
+
             <br>
 
             <div class="form-container">

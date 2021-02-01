@@ -34,11 +34,18 @@ body{
     text-align: center;
     width: 75%;
 }
-#newContainer {
+#header-container {
+    padding-left: 30px;
+    padding-right: 30px;
+    grid-gap: 1px;
     display: grid;
-    grid-template-columns: auto;
-    padding: 10px;
+    grid-template-columns: 85% 15%;
+    padding-top: 10px;
 }
+
+.header-item {
+}
+
 input[type=submit] {
     background-color: rgb(67, 150, 69);
     color: white;
@@ -59,8 +66,6 @@ input[type=submit]:hover {
     height: 200px;
     border: 1px solid #0f0c0c;
     margin:auto;
-    /* z-index: 1; */
-    /* perspective: 1000px; Remove this if you don't want the 3D effect */
 }
 
 .card-inner {
@@ -95,10 +100,6 @@ img {
   -o-transition: all .2s ease-in-out;
   -ms-transition: all .2s ease-in-out;
 }
-
-/* .card:hover .card-inner {
-    transform: rotateY(180deg);
-} */
 
 .card-click {
     transform: rotateY(180deg);
@@ -180,12 +181,6 @@ img {
 .close-button:hover {
   background-color: darkgray;
 }
-/* .show-modal {
-  opacity: 1;
-  visibility: visible;
-  transform: scale(1.0);
-  transition: visibility 0s linear 0s, opacity 0.25s 0s, transform 0.25s;
-} */
 
 .form-container {
   margin: auto;
@@ -221,10 +216,21 @@ input[type=submit]:hover {
 }
 
 #search-form {
-  width: 400px;
-  margin: auto;
+  width: 95%;
+/*  margin: auto;*/
 }
 
+#reset-btn {
+    margin: auto;
+    
+}
+
+#reset-submit {
+    font-size: 16px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+}
 #search-form input[type=text] {
   /* width: 340px; */
   box-sizing: border-box;

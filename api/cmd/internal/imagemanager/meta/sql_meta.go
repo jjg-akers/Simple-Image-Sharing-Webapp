@@ -30,7 +30,6 @@ func NewSQLDBManager(db *sql.DB) *SQLGetterSetter {
 func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, error) {
 	//select filename from DB where tag in(....)
 	//build query
-	// query := buildSearchQuery(len(tags))
 	query, _ := NewQuery(Tags(tags))
 
 	//get params

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/schema"
+	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
 )
@@ -41,27 +42,19 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// get images
 	images, err := h.ImageRetriever.Retrieve(r.Context(), rp.Tag)
-	//urls, err := h.ImageManager.Search(r.Context(), rp.Tag)
 	switch err {
 	case nil:
-	case imagemanager.ErrNotFound:
+	case meta.ErrNotFound:
+		log.Println("errnotfound")
+		// w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/html")
-		tpl.ExecuteTemplate(w, "index.html", "")
+		tpl.ExecuteTemplate(w, "index.html", images)
+		return
+
 	default:
 		log.Println("search handler failed url search: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	//fmt.Println("images from search: ", images)
-
-	// p := []string{}
-
-	// for _, image := range images {
-	// 	p = append(p, image.URI)
-	// }
-
-	type pathserver struct {
-		Paths []string
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html")
