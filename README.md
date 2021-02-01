@@ -35,8 +35,6 @@ The homepage should look similar to to ![Alt text](api/cmd/testfiles/homescreen.
 1. Upgrade UI
 2. Handle View All
 3. Delete an image/image(s)
-4. View an individual image
-5. “Permalink” to an individual image
 6. User Input Validation
 7. resize /format - standardize uploaded photos
 

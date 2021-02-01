@@ -84,8 +84,6 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
 		DB:          db,
-		//Decoder:     schema.NewDecoder(),
-		// ImageManager: imagemanager.NewSQLManager(db),
 		ImageGetter: imagestorage.NewMinioStorage(minioClient),
 	}
 
@@ -138,7 +136,8 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 	wg.Done()
 }
 
-// function is called on start up to get some stock photos into the db
+// function is called on application start up  just
+// to get some photos into the db for demonstration
 func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader) error {
 	// upload some default images
 	wd, err := os.Getwd()
