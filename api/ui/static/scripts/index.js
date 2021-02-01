@@ -4,22 +4,25 @@ window.onload=function(){
     
     }, function() {
         $(this).removeClass('transition');
-        // $(this).addClass('card-click');
     });
 
-    $('.card-inner').click(function() {
-        $(this).toggleClass('card-click');
-        // $(this).addClass('transition');
+    // display image
+    $('.card-inner').click(function(e) {
+        
+        if ($(e.target).hasClass('trigger')){
+            console.log("trigger clicked");
+            $(e.target).closest('.card').next('.modal').toggleClass("show-modal");
+            $('.card').toggle();
+        } else{
+            $(this).toggleClass('card-click');
+        }
     });
 
 
     $("#search-form").submit(function(e) {
-        //alert("tag saerch submitted");
-
         tag = $("#tag-search-val").val().trim();
 
         console.log("tag: ", tag)
-
 
         if (tag === "") {
             $( "#invalid" ).text( "Invalid" ).show().fadeOut( 2000 );
@@ -28,6 +31,28 @@ window.onload=function(){
         }
     });
 
+        
+    //close modal
+    $(".close-button").click(function(e) {
+        $(this).parent().parent().toggleClass("show-modal");
+        $('.card').toggle();
+        
+    });
+
+    //save image link to clipboard
+    $('.save-link').click(function(e){
+        srcStr = $(this).parent().parent().parent().prev().find('img').attr('src');
+        navigator.clipboard.writeText(srcStr);
+        alert("Image Saved to Clipboard");
+    });
+
+}
+
+//close modal
+function windowOnClick(event){
+    if(event.target === $(".modal")){
+        $(".modal").toggleClass("show-modal");
+    }
 }
 
     // route handlers

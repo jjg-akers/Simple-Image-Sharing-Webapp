@@ -84,8 +84,6 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
 		DB:          db,
-		//Decoder:     schema.NewDecoder(),
-		// ImageManager: imagemanager.NewSQLManager(db),
 		ImageGetter: imagestorage.NewMinioStorage(minioClient),
 	}
 
@@ -122,7 +120,7 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search, upload http.Handler) {
 
 	http.Handle("/favicon.ico", http.NotFoundHandler())
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/cmd/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/ui/static"))))
 
 	http.Handle("/upload", upload)
 	http.Handle("/search", search)
@@ -138,7 +136,8 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 	wg.Done()
 }
 
-// function is called on start up to get some stock photos into the db
+// function is called on application start up  just
+// to get some photos into the db for demonstration
 func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader) error {
 	// upload some default images
 	wd, err := os.Getwd()

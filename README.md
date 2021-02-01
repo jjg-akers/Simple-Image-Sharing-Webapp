@@ -28,15 +28,16 @@ docker-compose up --build
 
 The wepapp can be viewed at `http://localhost`
 
-The homepage should look similar to to ![Alt text](api/cmd/testfiles/homescreen.png "Home Screen")
+On start up some random photos are uploaded into storage and the DB. The homepage should look similar to: ![Alt text](api/cmd/testfiles/homescreen.png "Home Screen")
 
+To test the search/filter try typing `dog food` into the filter bar.
+
+When a new photo is uploaded, the returned results should include both the uploaded photo and any other realated (tagged) photos.
 
 ## TODOs ##
 1. Upgrade UI
 2. Handle View All
 3. Delete an image/image(s)
-4. View an individual image
-5. “Permalink” to an individual image
 6. User Input Validation
 7. resize /format - standardize uploaded photos
 

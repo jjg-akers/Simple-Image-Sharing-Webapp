@@ -18,13 +18,8 @@ apt-get install -yqq ca-certificates
 
 COPY --from=builder /app .
 
-# Copy the Pre-built binary file from the previous stage
-# COPY --from=builder /app/main .
 
 # RUN chmod +x ./main
 
-# final stage
-# FROM scratch
-# COPY --from=builder /app/main /app/
-EXPOSE 8080
+# EXPOSE 8080
 CMD ["./main"]

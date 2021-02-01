@@ -26,8 +26,6 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("method post")
-
 	// parse submitted file
 	mf, fh, err := r.FormFile("nf")
 	if err != nil {
