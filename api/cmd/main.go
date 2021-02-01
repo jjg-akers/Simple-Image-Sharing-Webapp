@@ -120,7 +120,6 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search, upload http.Handler) {
 
 	http.Handle("/favicon.ico", http.NotFoundHandler())
-	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/cmd/static"))))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/ui/static"))))
 
 	http.Handle("/upload", upload)
