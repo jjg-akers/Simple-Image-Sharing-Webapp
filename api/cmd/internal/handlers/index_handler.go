@@ -16,7 +16,9 @@ import (
 var tpl *template.Template
 
 func init() {
-	tpl = template.Must(template.ParseGlob("cmd/templates/*.html"))
+	// tpl = template.Must(template.ParseGlob("cmd/templates/*.html"))
+	tpl = template.Must(template.ParseGlob("cmd/../../ui/templates/*.html"))
+
 }
 
 type IndexHandler struct {
