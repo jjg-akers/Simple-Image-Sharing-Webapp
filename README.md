@@ -18,22 +18,25 @@ NOTE: To allow minio signed urls to resolve to the containerized service, add `m
 ```
 
 Run the application:
+From the root directory run
+ 
 ```
 docker-compose up --build
 ```
 
 ## Interaction ##
 
-The wepapp can be viewed at `http://localhost:8080`
+The wepapp can be viewed at `http://localhost`
+
+The homepage should look similar to to ![Alt text](api/cmd/testfiles/homescreen.png "Home Screen")
+
 
 ## TODOs ##
 1. Upgrade UI
 2. Handle View All
-3. Implement Search
-4. Delete an image/image(s)
-5. View an individual image
-6. “Permalink” to an individual image
-7. User Input Validation
-8. resize /format - standardize uploaded photos
-9. return uploaded and related photos on upload
+3. Delete an image/image(s)
+4. View an individual image
+5. “Permalink” to an individual image
+6. User Input Validation
+7. resize /format - standardize uploaded photos
 

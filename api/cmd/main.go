@@ -121,18 +121,12 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search, upload http.Handler) {
 
-	// define handler func for "/"
 	http.Handle("/favicon.ico", http.NotFoundHandler())
-
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/cmd/static"))))
 
-	//http.Handle("/testfiles", http.StripPrefix("/testfiles", http.FileServer(http.Dir("testfiles"))))
 	http.Handle("/upload", upload)
-
 	http.Handle("/search", search)
-
 	http.Handle("/", index)
-	// build.Build()
 
 	// Start server -- listen at localhost, port 8080
 	go func() {
@@ -144,21 +138,13 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 	wg.Done()
 }
 
+// function is called on start up to get some stock photos into the db
 func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader) error {
 	// upload some default images
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalln("coule not get wd: ", err)
 	}
-	// dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
-	// if err != nil {
-	// 	log.Fatalf("failed opening directory: %s", err)
-	// }
-	// files, err := dir.Readdirnames(-1)
-	// if err != nil {
-	// 	log.Fatalf("failed opening directory: %s", err)
-	// }
-	// dir.Close()
 
 	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
 	if err != nil {
@@ -171,10 +157,6 @@ func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader)
 	}
 
 	defer dir.Close()
-
-	// info[0]
-
-	//imageUploader.Upload()
 
 	for _, file := range fileInfo {
 		fileName := file.Name()
@@ -212,13 +194,6 @@ func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader)
 			log.Println("failed uploading image. err: ", err)
 			return err
 		}
-
-		// path := filepath.Join(wd, "cmd/testfiles", file)
-		// imageName := strings.TrimSuffix(file, filepath.Ext(file))
-
-		// if err := client.UploadImageFromFile(ctx, "testy-mctest-face", imageName, path); err != nil {
-		// 	return fmt.Errorf("Failed to upload new image, err: %s", err)
-		// }
 	}
 
 	return nil
