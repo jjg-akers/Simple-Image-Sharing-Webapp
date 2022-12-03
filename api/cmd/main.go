@@ -16,10 +16,8 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/handlers"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/handlers"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 type PhotoShareApp struct {
@@ -76,15 +74,15 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	}
 
 	imager := &imagemanager.SQLMinIOImpl{
-		Meta:    meta.NewSQLDBManager(db),
-		Storage: imagestorage.NewMinioStorage(minioClient),
+		Meta:    imagemanager.NewSQLDBManager(db),
+		Storage: imagemanager.NewMinioStorage(minioClient),
 	}
 
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
 		DB:          db,
-		ImageGetter: imagestorage.NewMinioStorage(minioClient),
+		ImageGetter: imagemanager.NewMinioStorage(minioClient),
 	}
 
 	searchHandler := &handlers.SearchHandler{
@@ -177,8 +175,8 @@ func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader)
 			return err
 		}
 
-		image := &imagestorage.ImageV1{
-			Meta: &meta.Meta{
+		image := &imagemanager.ImageV1{
+			Meta: &imagemanager.Meta{
 				FileName:    fileName,
 				Tag:         tag,
 				Title:       fileName,

@@ -1,4 +1,4 @@
-package imagestorage
+package imagemanager
 
 import (
 	"context"
@@ -7,19 +7,18 @@ import (
 	"sync/atomic"
 
 	//"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
 
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
 	"golang.org/x/sync/errgroup"
 )
 
 type ImageV1 struct {
-	Meta *meta.Meta `json:"Meta"`
+	Meta *Meta `json:"Meta"`
 	URI  string     `json:"url"`
 	File io.Reader  `json:"File"`
 }
 
-var _ GetterSetter = &MinioStorage{}
+var _ ImmageRepo = &MinioStorage{}
 
 // will implement the uploaderSearcher interface
 type MinioStorage struct {
@@ -35,7 +34,7 @@ func NewMinioStorage(client *remotestorage.MinIOClient) *MinioStorage {
 }
 
 //Get gets a []Images
-func (mm *MinioStorage) Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1, error) {
+func (mm *MinioStorage) GetImage(ctx context.Context, metas []*Meta) ([]*ImageV1, error) {
 	// get signed urls
 	g, ctx := errgroup.WithContext(ctx)
 	imageChan := make(chan *ImageV1)
@@ -89,7 +88,7 @@ func (mm *MinioStorage) Get(ctx context.Context, metas []*meta.Meta) ([]*ImageV1
 }
 
 //Set saves a image
-func (mm *MinioStorage) Set(ctx context.Context, filename string, size int64, file io.Reader) error {
+func (mm *MinioStorage) SetImage(ctx context.Context, filename string, size int64, file io.Reader) error {
 	if err := mm.Client.Upload(ctx, filename, file, size); err != nil {
 		fmt.Println("err Uploading image from minio setter: ", err)
 		return err

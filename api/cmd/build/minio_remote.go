@@ -3,7 +3,7 @@ package build
 import (
 	"log"
 
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
 )
 
 func NewMinIOStorage(config *RemoteStorageConfig) (*remotestorage.MinIOClient, error) {

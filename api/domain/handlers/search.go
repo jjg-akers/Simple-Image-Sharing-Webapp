@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/schema"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
-
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 type SearchRequestParams struct {
@@ -44,7 +42,7 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	images, err := h.ImageRetriever.Retrieve(r.Context(), rp.Tag)
 	switch err {
 	case nil:
-	case meta.ErrNotFound:
+	case imagemanager.ErrNotFound:
 		log.Println("errnotfound")
 		// w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/html")

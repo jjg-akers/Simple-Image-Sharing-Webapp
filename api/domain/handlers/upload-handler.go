@@ -10,9 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/schema"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 type UploadHandler struct {
@@ -34,7 +32,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer mf.Close()
 
 	// parse form fields
-	imageMeta := &meta.Meta{}
+	imageMeta := &imagemanager.Meta{}
 
 	if err = h.Decoder.Decode(imageMeta, r.PostForm); err != nil {
 		log.Println("err decoding post form: ", err)
@@ -42,7 +40,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	image := &imagestorage.ImageV1{
+	image := &imagemanager.ImageV1{
 		Meta: imageMeta,
 	}
 

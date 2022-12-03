@@ -1,4 +1,4 @@
-package meta
+package imagemanager
 
 import (
 	"context"
@@ -14,15 +14,15 @@ type Meta struct {
 	DateAdded   time.Time `json:"DateAdded"`
 }
 
-type Getter interface {
-	Get(ctx context.Context, tags []string) ([]*Meta, error)
+type MetaGetter interface {
+	GetMeta(ctx context.Context, tags []string) ([]*Meta, error)
 }
 
-type Setter interface {
-	Set(ctx context.Context, meta *Meta) error
+type MetaSetter interface {
+	SetMeta(ctx context.Context, meta *Meta) error
 }
 
-type GetterSetter interface {
-	Getter
-	Setter
+type MetaRepo interface {
+	MetaGetter
+	MetaSetter
 }

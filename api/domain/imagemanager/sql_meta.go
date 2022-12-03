@@ -1,4 +1,4 @@
-package meta
+package imagemanager
 
 import (
 	"context"
@@ -9,13 +9,13 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/db"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/db"
 )
 
 var ErrNotFound = errors.New("No images found in db for given tag")
 
 // runtime validation
-var _ GetterSetter = &SQLGetterSetter{}
+var _ MetaRepo = &SQLGetterSetter{}
 
 type SQLGetterSetter struct {
 	DB *sql.DB
@@ -27,7 +27,7 @@ func NewSQLDBManager(db *sql.DB) *SQLGetterSetter {
 	}
 }
 
-func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, error) {
+func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*Meta, error) {
 	//select filename from DB where tag in(....)
 	//build query
 	query, _ := NewQuery(Tags(tags))
@@ -68,7 +68,7 @@ func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, err
 
 }
 
-func (gs *SQLGetterSetter) Set(ctx context.Context, meta *Meta) error {
+func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *Meta) error {
 	query := fmt.Sprintf("INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);")
 
 	_, err := gs.DB.ExecContext(ctx, query, meta.FileName, meta.Tag, meta.Title, meta.Description, meta.DateAdded)

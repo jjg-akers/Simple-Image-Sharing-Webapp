@@ -8,9 +8,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/remotestorage"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 var tpl *template.Template
@@ -22,7 +21,7 @@ func init() {
 type IndexHandler struct {
 	RemoteStore *remotestorage.MinIOClient
 	DB          *sql.DB
-	ImageGetter imagestorage.Getter
+	ImageGetter imagemanager.ImageGetter
 }
 
 func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,13 +36,13 @@ func (h *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "index.html", images)
 }
 
-func getInitialImages(ctx context.Context, n int, db *sql.DB, imageGetter imagestorage.Getter) ([]*imagestorage.ImageV1, error) {
+func getInitialImages(ctx context.Context, n int, db *sql.DB, imageGetter imagemanager.ImageGetter) ([]*imagemanager.ImageV1, error) {
 	meta, err := selectRandom(ctx, 10, db)
 	if err != nil {
 		return nil, err
 	}
 
-	images, err := imageGetter.Get(ctx, meta)
+	images, err := imageGetter.GetImage(ctx, meta)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func getInitialImages(ctx context.Context, n int, db *sql.DB, imageGetter images
 	return images, nil
 }
 
-func selectRandom(ctx context.Context, n int, db *sql.DB) ([]*meta.Meta, error) {
+func selectRandom(ctx context.Context, n int, db *sql.DB) ([]*imagemanager.Meta, error) {
 
 	query := fmt.Sprintf(`SELECT image_name, tag, title, description 
 	FROM photoshare.images AS r1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM photoshare.images)) AS id) AS r2 
@@ -64,10 +63,10 @@ func selectRandom(ctx context.Context, n int, db *sql.DB) ([]*meta.Meta, error) 
 
 	defer rows.Close()
 
-	var toReturn []*meta.Meta
+	var toReturn []*imagemanager.Meta
 
 	for rows.Next() {
-		m := meta.Meta{}
+		m := imagemanager.Meta{}
 
 		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
 		if err != nil {
