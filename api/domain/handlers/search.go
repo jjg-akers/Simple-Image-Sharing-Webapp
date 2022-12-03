@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/schema"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
@@ -42,7 +43,7 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	images, err := h.ImageRetriever.Retrieve(r.Context(), rp.Tag)
 	switch err {
 	case nil:
-	case imagemanager.ErrNotFound:
+	case domain.ErrNotFound:
 		log.Println("errnotfound")
 		// w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/html")

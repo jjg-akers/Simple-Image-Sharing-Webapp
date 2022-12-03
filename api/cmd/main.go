@@ -16,6 +16,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/db"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain/handlers"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
@@ -63,7 +64,7 @@ func newPhotoShareApp() *photoShareApp {
 func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 
 	// build components
-	db, err := build.NewSQLDB(api.config.DBConfig)
+	repo, err := build.NewSQLDB(api.config.DBConfig)
 	if err != nil {
 		return fmt.Errorf("Failed to build SQL DB, err: %s", err)
 	}
@@ -74,14 +75,14 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	}
 
 	imager := &imagemanager.SQLMinIOImpl{
-		Meta:    imagemanager.NewSQLDBManager(db),
+		Meta:    db.NewSQLDBManager(repo),
 		Storage: imagemanager.NewMinioStorage(minioClient),
 	}
 
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
 		RemoteStore: minioClient,
-		DB:          db,
+		DB:          repo,
 		ImageGetter: imagemanager.NewMinioStorage(minioClient),
 	}
 

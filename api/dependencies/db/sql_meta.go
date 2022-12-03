@@ -1,21 +1,19 @@
-package imagemanager
+package db
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/db"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
-var ErrNotFound = errors.New("No images found in db for given tag")
-
 // runtime validation
-var _ MetaRepo = &SQLGetterSetter{}
+var _ imagemanager.MetaRepo = &SQLGetterSetter{}
 
 type SQLGetterSetter struct {
 	DB *sql.DB
@@ -27,13 +25,13 @@ func NewSQLDBManager(db *sql.DB) *SQLGetterSetter {
 	}
 }
 
-func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*Meta, error) {
+func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*imagemanager.Meta, error) {
 	//select filename from DB where tag in(....)
 	//build query
 	query, _ := NewQuery(Tags(tags))
 
 	//get params
-	args, err := db.NewSQLParams(db.StringParam(tags))
+	args, err := NewSQLParams(StringParam(tags))
 	if err != nil {
 		fmt.Println("err creating sql params: ", err)
 		return nil, err
@@ -46,10 +44,10 @@ func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*Meta,
 
 	defer rows.Close()
 
-	var toReturn []*Meta
+	var toReturn []*imagemanager.Meta
 
 	for rows.Next() {
-		m := Meta{}
+		m := imagemanager.Meta{}
 
 		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
 		if err != nil {
@@ -61,14 +59,14 @@ func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*Meta,
 
 	if len(toReturn) == 0 {
 		log.Println("no results")
-		return nil, ErrNotFound
+		return nil, domain.ErrNotFound
 	}
 
 	return toReturn, nil
 
 }
 
-func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *Meta) error {
+func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *imagemanager.Meta) error {
 	query := fmt.Sprintf("INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);")
 
 	_, err := gs.DB.ExecContext(ctx, query, meta.FileName, meta.Tag, meta.Title, meta.Description, meta.DateAdded)
