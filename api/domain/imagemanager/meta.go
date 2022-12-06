@@ -16,6 +16,7 @@ type Meta struct {
 
 type MetaGetter interface {
 	GetMeta(ctx context.Context, tags []string) ([]*Meta, error)
+	GetRandom(ctx context.Context, n int) ([]*Meta, error)
 }
 
 type MetaSetter interface {

@@ -1,150 +1,140 @@
 package remotestorage
 
-import (
-	"context"
-	"fmt"
-	"io"
-	"log"
-	"net/url"
-	"time"
+// import (
+// 	"github.com/minio/minio-go/v7"
+// )
 
-	"golang.org/x/sync/errgroup"
+// type MinIOClient struct {
+// 	Client *minio.Client
+// }
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-)
+// func (mc *MinIOClient) Upload(ctx context.Context, imageName string, reader io.Reader, size int64) error {
+// 	contentType := "application/jpg"
+// 	_, err := mc.Client.PutObject(ctx, "testy-mctest-face", imageName, reader, size, minio.PutObjectOptions{ContentType: contentType})
+// 	if err != nil {
+// 		fmt.Println("failed to put file: ", err)
+// 		return err
+// 	}
 
-type MinIOClient struct {
-	Client *minio.Client
-}
+// 	//fmt.Printf("succesffully put file. location: %s, size: %d\n", info.Location, info.Size)
+// 	return nil
+// }
 
-func (mc *MinIOClient) Upload(ctx context.Context, imageName string, reader io.Reader, size int64) error {
-	contentType := "application/jpg"
-	_, err := mc.Client.PutObject(ctx, "testy-mctest-face", imageName, reader, size, minio.PutObjectOptions{ContentType: contentType})
-	if err != nil {
-		fmt.Println("failed to put file: ", err)
-		return err
-	}
+// func (mc *MinIOClient) Get(ctx context.Context, file string) (*url.URL, error) {
 
-	//fmt.Printf("succesffully put file. location: %s, size: %d\n", info.Location, info.Size)
-	return nil
-}
+// 	signedURL, err := mc.NewPresignedGet(ctx, file)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("error getting signed url: %s", err)
+// 	}
 
-func (mc *MinIOClient) Get(ctx context.Context, file string) (*url.URL, error) {
+// 	return signedURL, nil
+// }
 
-	signedURL, err := mc.NewPresignedGet(ctx, file)
-	if err != nil {
-		return nil, fmt.Errorf("error getting signed url: %s", err)
-	}
+// func (mc *MinIOClient) GetMulti(ctx context.Context, files []string) ([]string, error) {
 
-	return signedURL, nil
-}
+// 	paths := make([]string, len(files))
 
-func (mc *MinIOClient) GetMulti(ctx context.Context, files []string) ([]string, error) {
+// 	g, ctx := errgroup.WithContext(ctx)
 
-	paths := make([]string, len(files))
+// 	for i, file := range files {
+// 		i, file := i, file
+// 		g.Go(func() error {
 
-	g, ctx := errgroup.WithContext(ctx)
+// 			signedURL, err := mc.NewPresignedGet(ctx, file)
+// 			//fmt.Println("url: ", signedURL)
+// 			if err != nil {
+// 				return fmt.Errorf("error getting signed url: %s", err)
+// 			}
 
-	for i, file := range files {
-		i, file := i, file
-		g.Go(func() error {
+// 			select {
+// 			case <-ctx.Done():
+// 				return ctx.Err()
+// 			default:
+// 				paths[i] = signedURL.String()
+// 			}
 
-			signedURL, err := mc.NewPresignedGet(ctx, file)
-			//fmt.Println("url: ", signedURL)
-			if err != nil {
-				return fmt.Errorf("error getting signed url: %s", err)
-			}
+// 			return nil
+// 		})
+// 	}
 
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			default:
-				paths[i] = signedURL.String()
-			}
+// 	if g.Wait() != nil {
+// 		return nil, g.Wait()
+// 	}
 
-			return nil
-		})
-	}
+// 	return paths, nil
+// }
 
-	if g.Wait() != nil {
-		return nil, g.Wait()
-	}
+// func NewMinIOClient(endpoint, accessKeyID, accessKeySecret string, useSSL bool) (*MinIOClient, error) {
+// endpoint := "localhost:9000"
+// accessKeyID := "minioadmin"
+// secretAccessKey := "minioadmin"
+// useSSL := false
 
-	return paths, nil
-}
+// Initialize minio client object.
+// 	minioClient, err := minio.New(endpoint, &minio.Options{
+// 		Creds:  credentials.NewStaticV4(accessKeyID, accessKeySecret, ""),
+// 		Secure: useSSL,
+// 	})
+// 	if err != nil {
+// 		log.Println("failed to create new client")
+// 		return nil, err
+// 	}
 
-func NewMinIOClient(endpoint, accessKeyID, accessKeySecret string, useSSL bool) (*MinIOClient, error) {
-	// endpoint := "localhost:9000"
-	// accessKeyID := "minioadmin"
-	// secretAccessKey := "minioadmin"
-	// useSSL := false
+// 	return &MinIOClient{
+// 		Client: minioClient,
+// 	}, nil
+// }
 
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, accessKeySecret, ""),
-		Secure: useSSL,
-	})
-	if err != nil {
-		log.Println("failed to create new client")
-		return nil, err
-	}
+// func (mc *MinIOClient) MakeNewBucket(ctx context.Context, bucketName, location string) error {
 
-	return &MinIOClient{
-		Client: minioClient,
-	}, nil
-}
+// 	//bucketName := "mytestbucket"
+// 	//location := "us-east-1"
 
-func (mc *MinIOClient) MakeNewBucket(ctx context.Context, bucketName, location string) error {
+// 	err := mc.Client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
+// 	if err != nil {
+// 		// Check to see if we already own this bucket (which happens if you run this twice)
+// 		exists, errBucketExists := mc.Client.BucketExists(ctx, bucketName)
+// 		if errBucketExists == nil && exists {
+// 			log.Printf("We already own %s\n", bucketName)
+// 			return nil
+// 		} else {
+// 			log.Println("error creating buckdt: ", err)
+// 			return err
+// 		}
+// 	} else {
+// 		log.Printf("Successfully created %s\n", bucketName)
+// 		return nil
+// 	}
+// }
 
-	//bucketName := "mytestbucket"
-	//location := "us-east-1"
+// func (mc MinIOClient) UploadImageFromFile(ctx context.Context, bucketName, imageName, filePath string) error {
 
-	err := mc.Client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{Region: location})
-	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
-		exists, errBucketExists := mc.Client.BucketExists(ctx, bucketName)
-		if errBucketExists == nil && exists {
-			log.Printf("We already own %s\n", bucketName)
-			return nil
-		} else {
-			log.Println("error creating buckdt: ", err)
-			return err
-		}
-	} else {
-		log.Printf("Successfully created %s\n", bucketName)
-		return nil
-	}
-}
+// 	contentType := "application/jpg"
 
-func (mc MinIOClient) UploadImageFromFile(ctx context.Context, bucketName, imageName, filePath string) error {
+// 	n, err := mc.Client.FPutObject(ctx, bucketName, imageName, filePath, minio.PutObjectOptions{ContentType: contentType})
+// 	if err != nil {
+// 		log.Println("error uploading image: ", err)
+// 		return err
+// 		//log.Fatalln(err)
+// 	}
 
-	contentType := "application/jpg"
+// 	log.Printf("Successfully uploaded %s of size %d\n", imageName, n.Size)
+// 	return nil
+// }
 
-	n, err := mc.Client.FPutObject(ctx, bucketName, imageName, filePath, minio.PutObjectOptions{ContentType: contentType})
-	if err != nil {
-		log.Println("error uploading image: ", err)
-		return err
-		//log.Fatalln(err)
-	}
+// func (mc *MinIOClient) NewPresignedGet(ctx context.Context, objectName string) (*url.URL, error) {
+// 	// Set request parameters for content-disposition.
+// 	reqParams := make(url.Values)
+// 	reqParams.Set("response-content-disposition", "attachment; filename=\""+objectName+"\"")
 
-	log.Printf("Successfully uploaded %s of size %d\n", imageName, n.Size)
-	return nil
-}
+// 	bucketName := "testy-mctest-face"
 
-func (mc *MinIOClient) NewPresignedGet(ctx context.Context, objectName string) (*url.URL, error) {
-	// Set request parameters for content-disposition.
-	reqParams := make(url.Values)
-	reqParams.Set("response-content-disposition", "attachment; filename=\""+objectName+"\"")
+// 	// Generates a presigned url which expires in a day.
+// 	presignedURL, err := mc.Client.PresignedGetObject(ctx, bucketName, objectName, time.Second*24*60*60, reqParams)
+// 	if err != nil {
+// 		fmt.Println("error generating presignedGet url: ", err)
+// 		return nil, err
+// 	}
 
-	bucketName := "testy-mctest-face"
-
-	// Generates a presigned url which expires in a day.
-	presignedURL, err := mc.Client.PresignedGetObject(ctx, bucketName, objectName, time.Second*24*60*60, reqParams)
-	if err != nil {
-		fmt.Println("error generating presignedGet url: ", err)
-		return nil, err
-	}
-
-	return presignedURL, nil
-}
+// 	return presignedURL, nil
+// }

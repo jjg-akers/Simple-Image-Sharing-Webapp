@@ -15,7 +15,7 @@ import (
 
 type UploadHandler struct {
 	Decoder      *schema.Decoder
-	ImageHandler imagemanager.UploaderRetriever
+	ImageHandler imagemanager.ImageService
 }
 
 func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

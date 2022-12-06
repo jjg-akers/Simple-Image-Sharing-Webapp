@@ -67,7 +67,7 @@ func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*image
 }
 
 func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *imagemanager.Meta) error {
-	query := fmt.Sprintf("INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);")
+	query := "INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);"
 
 	_, err := gs.DB.ExecContext(ctx, query, meta.FileName, meta.Tag, meta.Title, meta.Description, meta.DateAdded)
 	if err != nil {
@@ -88,6 +88,35 @@ func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *imagemanager.Meta)
 	log.Printf("successfully inserted image %s with tag %s.\n", meta.FileName, meta.Tag)
 
 	return nil
+}
+
+func (gs *SQLGetterSetter) GetRandom(ctx context.Context, n int) ([]*imagemanager.Meta, error) {
+
+	query := `SELECT image_name, tag, title, description 
+	FROM photoshare.images AS r1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM photoshare.images)) AS id) AS r2 
+	WHERE r1.id >= r2.id ORDER BY r1.id ASC LIMIT 6;`
+
+	rows, err := gs.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("could not query db: %s", err)
+	}
+
+	defer rows.Close()
+
+	var toReturn []*imagemanager.Meta
+
+	for rows.Next() {
+		m := imagemanager.Meta{}
+
+		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning results: %s", err)
+		}
+
+		toReturn = append(toReturn, &m)
+	}
+
+	return toReturn, nil
 }
 
 func buildSearchQuery(numerOfArgs int) string {

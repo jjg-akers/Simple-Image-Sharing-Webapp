@@ -11,9 +11,10 @@ type Uploader interface {
 
 type Retriever interface {
 	Retrieve(ctx context.Context, tags []string) ([]*ImageV1, error)
+	Random(ctx context.Context, n int) ([]*ImageV1, error)
 }
 
-type UploaderRetriever interface {
+type ImageService interface {
 	Uploader
 	Retriever
 }

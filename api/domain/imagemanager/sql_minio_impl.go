@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-var _ UploaderRetriever = &SQLMinIOImpl{}
+var _ ImageService = &SQLMinIOImpl{}
 
 type SQLMinIOImpl struct {
 	Meta    MetaRepo
@@ -29,6 +29,35 @@ func (sm *SQLMinIOImpl) Retrieve(ctx context.Context, tags []string) ([]*ImageV1
 	}
 
 	return images, nil
+}
+
+func (sm *SQLMinIOImpl) Random(ctx context.Context, n int) ([]*ImageV1, error){
+	meta, err := sm.Meta.GetRandom(ctx, n)
+	if err != nil {
+		log.Println("error retreiving meta: ", err)
+		return nil, err
+	}
+
+	images, err := sm.Storage.GetImage(ctx, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	return images, nil	
+	// imageMetas, err := sm.Meta.GetMeta(ctx, tags)
+	// if err != nil {
+	// 	log.Println("error retreiving meta: ", err)
+	// 	return nil, err
+	// }
+
+	// //get images
+	// images, err := sm.Storage.GetImage(ctx, imageMetas)
+	// if err != nil {
+	// 	log.Println("error getting images: ", err)
+	// 	return nil, err
+	// }
+
+	// return images, nil
 }
 
 func (sm *SQLMinIOImpl) Upload(ctx context.Context, image *ImageV1) error {

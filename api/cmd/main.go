@@ -17,6 +17,7 @@ import (
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
 	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/db"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain/handlers"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
@@ -69,21 +70,22 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 		return fmt.Errorf("Failed to build SQL DB, err: %s", err)
 	}
 
-	minioClient, err := build.NewMinIOStorage(api.config.StorageConfig)
+	minioClient, err := build.NewMinIOStorage(cliCtx.Context, api.config.StorageConfig)
 	if err != nil {
 		return fmt.Errorf("Failed to build Minio client, err: %s", err)
 	}
 
 	imager := &imagemanager.SQLMinIOImpl{
 		Meta:    db.NewSQLDBManager(repo),
-		Storage: imagemanager.NewMinioStorage(minioClient),
+		Storage: remotestorage.NewMinioStorage(minioClient),
 	}
 
 	//set up handlers
 	indexHandler := &handlers.IndexHandler{
-		RemoteStore: minioClient,
-		DB:          repo,
-		ImageGetter: imagemanager.NewMinioStorage(minioClient),
+		// RemoteStore: minioClient,
+		ImageRetriever: imager,
+		// DB:          repo,
+		// ImageGetter: imagemanager.NewMinioStorage(minioClient),
 	}
 
 	searchHandler := &handlers.SearchHandler{
@@ -97,9 +99,9 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 	}
 
 	// initialize a bucket and put some random photos in it
-	if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
-		return fmt.Errorf("Failed to create new bucket, err: %s", err)
-	}
+	// if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
+	// 	return fmt.Errorf("Failed to create new bucket, err: %s", err)
+	// }
 
 	if err := uploadStockImages(cliCtx.Context, imager); err != nil {
 		return fmt.Errorf("failed to upload stock images")
