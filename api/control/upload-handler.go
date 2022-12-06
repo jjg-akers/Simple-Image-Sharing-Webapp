@@ -1,4 +1,4 @@
-package handlers
+package control
 
 import (
 	"crypto/sha1"
@@ -10,14 +10,12 @@ import (
 	"time"
 
 	"github.com/gorilla/schema"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 )
 
 type UploadHandler struct {
 	Decoder      *schema.Decoder
-	ImageHandler imagemanager.UploaderRetriever
+	ImageHandler domain.ImageService
 }
 
 func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +32,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer mf.Close()
 
 	// parse form fields
-	imageMeta := &meta.Meta{}
+	imageMeta := &domain.Meta{}
 
 	if err = h.Decoder.Decode(imageMeta, r.PostForm); err != nil {
 		log.Println("err decoding post form: ", err)
@@ -42,7 +40,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	image := &imagestorage.ImageV1{
+	image := &domain.ImageV1{
 		Meta: imageMeta,
 	}
 

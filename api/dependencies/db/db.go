@@ -1,18 +1,5 @@
 package db
 
-type Inserter interface {
-	Insert()
-}
-
-type Retriever interface {
-	Retrieve()
-}
-
-type InserterRetriver interface {
-	Inserter
-	Retriever
-}
-
 type SQLParams struct {
 	Params []interface{}
 }

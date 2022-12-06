@@ -1,21 +1,18 @@
-package meta
+package db
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/db"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 )
 
-var ErrNotFound = errors.New("No images found in db for given tag")
-
 // runtime validation
-var _ GetterSetter = &SQLGetterSetter{}
+var _ domain.MetaRepo = &SQLGetterSetter{}
 
 type SQLGetterSetter struct {
 	DB *sql.DB
@@ -27,13 +24,13 @@ func NewSQLDBManager(db *sql.DB) *SQLGetterSetter {
 	}
 }
 
-func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, error) {
+func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*domain.Meta, error) {
 	//select filename from DB where tag in(....)
 	//build query
 	query, _ := NewQuery(Tags(tags))
 
 	//get params
-	args, err := db.NewSQLParams(db.StringParam(tags))
+	args, err := NewSQLParams(StringParam(tags))
 	if err != nil {
 		fmt.Println("err creating sql params: ", err)
 		return nil, err
@@ -46,10 +43,10 @@ func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, err
 
 	defer rows.Close()
 
-	var toReturn []*Meta
+	var toReturn []*domain.Meta
 
 	for rows.Next() {
-		m := Meta{}
+		m := domain.Meta{}
 
 		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
 		if err != nil {
@@ -61,15 +58,15 @@ func (gs *SQLGetterSetter) Get(ctx context.Context, tags []string) ([]*Meta, err
 
 	if len(toReturn) == 0 {
 		log.Println("no results")
-		return nil, ErrNotFound
+		return nil, domain.ErrNotFound
 	}
 
 	return toReturn, nil
 
 }
 
-func (gs *SQLGetterSetter) Set(ctx context.Context, meta *Meta) error {
-	query := fmt.Sprintf("INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);")
+func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *domain.Meta) error {
+	query := "INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);"
 
 	_, err := gs.DB.ExecContext(ctx, query, meta.FileName, meta.Tag, meta.Title, meta.Description, meta.DateAdded)
 	if err != nil {
@@ -90,6 +87,35 @@ func (gs *SQLGetterSetter) Set(ctx context.Context, meta *Meta) error {
 	log.Printf("successfully inserted image %s with tag %s.\n", meta.FileName, meta.Tag)
 
 	return nil
+}
+
+func (gs *SQLGetterSetter) GetRandom(ctx context.Context, n int) ([]*domain.Meta, error) {
+
+	query := `SELECT image_name, tag, title, description 
+	FROM photoshare.images AS r1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM photoshare.images)) AS id) AS r2 
+	WHERE r1.id >= r2.id ORDER BY r1.id ASC LIMIT 6;`
+
+	rows, err := gs.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("could not query db: %s", err)
+	}
+
+	defer rows.Close()
+
+	var toReturn []*domain.Meta
+
+	for rows.Next() {
+		m := domain.Meta{}
+
+		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning results: %s", err)
+		}
+
+		toReturn = append(toReturn, &m)
+	}
+
+	return toReturn, nil
 }
 
 func buildSearchQuery(numerOfArgs int) string {
