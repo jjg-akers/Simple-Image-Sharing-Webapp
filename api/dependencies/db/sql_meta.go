@@ -9,11 +9,10 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
-	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 // runtime validation
-var _ imagemanager.MetaRepo = &SQLGetterSetter{}
+var _ domain.MetaRepo = &SQLGetterSetter{}
 
 type SQLGetterSetter struct {
 	DB *sql.DB
@@ -25,7 +24,7 @@ func NewSQLDBManager(db *sql.DB) *SQLGetterSetter {
 	}
 }
 
-func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*imagemanager.Meta, error) {
+func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*domain.Meta, error) {
 	//select filename from DB where tag in(....)
 	//build query
 	query, _ := NewQuery(Tags(tags))
@@ -44,10 +43,10 @@ func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*image
 
 	defer rows.Close()
 
-	var toReturn []*imagemanager.Meta
+	var toReturn []*domain.Meta
 
 	for rows.Next() {
-		m := imagemanager.Meta{}
+		m := domain.Meta{}
 
 		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
 		if err != nil {
@@ -66,7 +65,7 @@ func (gs *SQLGetterSetter) GetMeta(ctx context.Context, tags []string) ([]*image
 
 }
 
-func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *imagemanager.Meta) error {
+func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *domain.Meta) error {
 	query := "INSERT INTO `photoshare`.`images` (`image_name`, `tag`, `title`, `description`, `date_added`) VALUES (?, ?, ?, ?, ?);"
 
 	_, err := gs.DB.ExecContext(ctx, query, meta.FileName, meta.Tag, meta.Title, meta.Description, meta.DateAdded)
@@ -90,7 +89,7 @@ func (gs *SQLGetterSetter) SetMeta(ctx context.Context, meta *imagemanager.Meta)
 	return nil
 }
 
-func (gs *SQLGetterSetter) GetRandom(ctx context.Context, n int) ([]*imagemanager.Meta, error) {
+func (gs *SQLGetterSetter) GetRandom(ctx context.Context, n int) ([]*domain.Meta, error) {
 
 	query := `SELECT image_name, tag, title, description 
 	FROM photoshare.images AS r1 JOIN (SELECT CEIL(RAND() * (SELECT MAX(id) FROM photoshare.images)) AS id) AS r2 
@@ -103,10 +102,10 @@ func (gs *SQLGetterSetter) GetRandom(ctx context.Context, n int) ([]*imagemanage
 
 	defer rows.Close()
 
-	var toReturn []*imagemanager.Meta
+	var toReturn []*domain.Meta
 
 	for rows.Next() {
-		m := imagemanager.Meta{}
+		m := domain.Meta{}
 
 		err = rows.Scan(&m.FileName, &m.Tag, &m.Title, &m.Description)
 		if err != nil {

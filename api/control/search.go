@@ -1,4 +1,4 @@
-package handlers
+package control
 
 import (
 	"log"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/schema"
 	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
-	"github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
 )
 
 type SearchRequestParams struct {
@@ -16,7 +15,7 @@ type SearchRequestParams struct {
 
 type SearchHandler struct {
 	// ImageManager imagemanager.Searcher
-	ImageRetriever imagemanager.Retriever
+	ImageRetriever domain.Retriever
 	Decoder        *schema.Decoder
 }
 

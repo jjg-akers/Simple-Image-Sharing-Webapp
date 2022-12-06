@@ -5,37 +5,25 @@ import (
 	"fmt"
 	"log"
 
-	// "github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
-
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 func NewMinIOStorage(ctx context.Context, config *RemoteStorageConfig) (*minio.Client, error) {
 
-		// Initialize minio client object.
-		client, err := minio.New(config.Endpoint, &minio.Options{
-			Creds:  credentials.NewStaticV4(config.AccessKeyID, config.AccessKeySecret, ""),
-			Secure: config.useSSL,
-		})
-		if err != nil {
-			log.Println("failed to create new minio client")
-			return nil, err
-		}
+	// Initialize minio client object.
+	client, err := minio.New(config.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(config.AccessKeyID, config.AccessKeySecret, ""),
+		Secure: config.useSSL,
+	})
+	if err != nil {
+		log.Println("failed to create new minio client")
+		return nil, err
+	}
 
-		// if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
-		// 	return fmt.Errorf("Failed to create new bucket, err: %s", err)
-		// }
-
-		if err := initializeBucket(ctx, client, "testy-mctest-face", "us-east-1"); err != nil {
+	if err := initializeBucket(ctx, client, "testy-mctest-face", "us-east-1"); err != nil {
 		return nil, fmt.Errorf("failed to create new bucket, err: %s", err)
-		}
-	
-	// client, err := remotestorage.NewMinIOClient(config.Endpoint, config.AccessKeyID, config.AccessKeySecret, config.useSSL)
-	// if err != nil {
-	// 	log.Println("err building minio: ", err)
-	// 	return nil, err
-	// }
+	}
 
 	return client, nil
 }

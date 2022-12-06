@@ -8,9 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	//"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-
-	domain "github.com/jjg-akers/simple-image-sharing-webapp/domain/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 	"github.com/minio/minio-go/v7"
 	"golang.org/x/sync/errgroup"
 )
@@ -19,7 +17,6 @@ var _ domain.ImmageRepo = &MinioStorage{}
 
 // will implement the uploaderSearcher interface
 type MinioStorage struct {
-	// Client *MinIOClient
 	Client *minio.Client
 }
 

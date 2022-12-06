@@ -1,4 +1,4 @@
-package imagemanager
+package domain
 
 import (
 	"context"

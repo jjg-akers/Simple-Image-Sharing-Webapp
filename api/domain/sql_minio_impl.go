@@ -1,4 +1,4 @@
-package imagemanager
+package domain
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func (sm *SQLMinIOImpl) Retrieve(ctx context.Context, tags []string) ([]*ImageV1
 	return images, nil
 }
 
-func (sm *SQLMinIOImpl) Random(ctx context.Context, n int) ([]*ImageV1, error){
+func (sm *SQLMinIOImpl) Random(ctx context.Context, n int) ([]*ImageV1, error) {
 	meta, err := sm.Meta.GetRandom(ctx, n)
 	if err != nil {
 		log.Println("error retreiving meta: ", err)
@@ -43,7 +43,7 @@ func (sm *SQLMinIOImpl) Random(ctx context.Context, n int) ([]*ImageV1, error){
 		return nil, err
 	}
 
-	return images, nil	
+	return images, nil
 	// imageMetas, err := sm.Meta.GetMeta(ctx, tags)
 	// if err != nil {
 	// 	log.Println("error retreiving meta: ", err)

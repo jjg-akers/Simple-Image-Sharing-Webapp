@@ -5,8 +5,8 @@ import (
 )
 
 type AppConfig struct {
-	Dev bool
-	Version string
+	Dev           bool
+	Version       string
 	DBConfig      *SQLDBConfig
 	StorageConfig *RemoteStorageConfig
 }
@@ -19,20 +19,20 @@ func NewAppConfig() *AppConfig {
 }
 
 func LoadAppConfig(config *AppConfig) []cli.Flag {
-	 flags := []cli.Flag {
+	flags := []cli.Flag{
 		&cli.BoolFlag{
 			Name:        "dev",
 			EnvVars:     []string{"DEV"},
 			Destination: &config.Dev,
-			Value: false,
+			Value:       false,
 		},
 		&cli.StringFlag{
 			Name:        "version",
 			EnvVars:     []string{"VERSION"},
 			Destination: &config.Version,
-			Value: "V!1",
+			Value:       "V!1",
 		},
-	 }
+	}
 
 	flags = append(flags, LoadSQLDBConfig(config.DBConfig)...)
 	flags = append(flags, LoadStorageConfig(config.StorageConfig)...)
