@@ -16,10 +16,10 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/build"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/handlers"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/imagestorage"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
+	"github.com/jjg-akers/simple-image-sharing-webapp/control"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/db"
+	"github.com/jjg-akers/simple-image-sharing-webapp/dependencies/remotestorage"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 )
 
 type PhotoShareApp struct {
@@ -65,43 +65,37 @@ func newPhotoShareApp() *photoShareApp {
 func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 
 	// build components
-	db, err := build.NewSQLDB(api.config.DBConfig)
+	repo, err := build.NewSQLDB(api.config.DBConfig)
 	if err != nil {
-		return fmt.Errorf("Failed to build SQL DB, err: %s", err)
+		return fmt.Errorf("failed to build SQL DB, err: %s", err)
 	}
 
-	minioClient, err := build.NewMinIOStorage(api.config.StorageConfig)
+	minioClient, err := build.NewMinIOStorage(cliCtx.Context, api.config.StorageConfig)
 	if err != nil {
-		return fmt.Errorf("Failed to build Minio client, err: %s", err)
+		return fmt.Errorf("failed to build Minio client, err: %s", err)
 	}
 
-	imager := &imagemanager.SQLMinIOImpl{
-		Meta:    meta.NewSQLDBManager(db),
-		Storage: imagestorage.NewMinioStorage(minioClient),
+	imager := &domain.SQLMinIOImpl{
+		Meta:    db.NewSQLDBManager(repo),
+		Storage: remotestorage.NewMinioStorage(minioClient),
 	}
 
 	//set up handlers
-	indexHandler := &handlers.IndexHandler{
-		RemoteStore: minioClient,
-		DB:          db,
-		ImageGetter: imagestorage.NewMinioStorage(minioClient),
+	indexHandler := &control.IndexHandler{
+		ImageRetriever: imager,
 	}
 
-	searchHandler := &handlers.SearchHandler{
+	searchHandler := &control.SearchHandler{
 		ImageRetriever: imager,
 		Decoder:        schema.NewDecoder(),
 	}
 
-	uploadHandler := &handlers.UploadHandler{
+	uploadHandler := &control.UploadHandler{
 		Decoder:      schema.NewDecoder(),
 		ImageHandler: imager,
 	}
 
 	// initialize a bucket and put some random photos in it
-	if err := minioClient.MakeNewBucket(cliCtx.Context, "testy-mctest-face", "us-east-1"); err != nil {
-		return fmt.Errorf("Failed to create new bucket, err: %s", err)
-	}
-
 	if err := uploadStockImages(cliCtx.Context, imager); err != nil {
 		return fmt.Errorf("failed to upload stock images")
 	}
@@ -120,7 +114,7 @@ func (api *photoShareApp) startAPI(cliCtx *cli.Context) error {
 func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Signal, index, search, upload http.Handler) {
 
 	http.Handle("/favicon.ico", http.NotFoundHandler())
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/ui/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/static"))))
 
 	http.Handle("/upload", upload)
 	http.Handle("/search", search)
@@ -138,14 +132,14 @@ func startServer(ctx context.Context, wg *sync.WaitGroup, interrupt chan os.Sign
 
 // function is called on application start up  just
 // to get some photos into the db for demonstration
-func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader) error {
+func uploadStockImages(ctx context.Context, imageUploader domain.Uploader) error {
 	// upload some default images
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalln("coule not get wd: ", err)
 	}
 
-	dir, err := os.Open(filepath.Join(wd, "cmd/testfiles"))
+	dir, err := os.Open(filepath.Join(wd, "testfiles"))
 	if err != nil {
 		log.Fatalf("failed opening directory: %s", err)
 	}
@@ -171,14 +165,14 @@ func uploadStockImages(ctx context.Context, imageUploader imagemanager.Uploader)
 			tag = "unknown"
 		}
 
-		fileReader, err := os.Open(filepath.Join(wd, "cmd/testfiles", fileName))
+		fileReader, err := os.Open(filepath.Join(wd, "testfiles", fileName))
 		if err != nil {
 			log.Println("failed to open file. err: ", err)
 			return err
 		}
 
-		image := &imagestorage.ImageV1{
-			Meta: &meta.Meta{
+		image := &domain.ImageV1{
+			Meta: &domain.Meta{
 				FileName:    fileName,
 				Tag:         tag,
 				Title:       fileName,

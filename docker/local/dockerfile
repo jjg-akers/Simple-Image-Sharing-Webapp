@@ -3,12 +3,12 @@ FROM golang:1.14-buster as builder
 
 WORKDIR /app
 
-COPY . .
+COPY api /app
 
 RUN go mod download
 # RUN install -v -mod=vendor ./cmd/...
 
-RUN go build -o main ./cmd
+RUN go build -o /main ./cmd
 
 # Run stage
 FROM debian:buster
@@ -16,10 +16,8 @@ FROM debian:buster
 RUN apt-get update --fix-missing && \
 apt-get install -yqq ca-certificates
 
-COPY --from=builder /app .
+COPY --from=builder /main .
 
+COPY --from=builder /app/ui .
 
-# RUN chmod +x ./main
-
-# EXPOSE 8080
-CMD ["./main"]
+CMD ["/main"]

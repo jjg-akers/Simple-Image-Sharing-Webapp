@@ -1,4 +1,4 @@
-package handlers
+package control
 
 import (
 	"log"
@@ -6,9 +6,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/schema"
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager/meta"
-
-	"github.com/jjg-akers/simple-image-sharing-webapp/cmd/internal/imagemanager"
+	"github.com/jjg-akers/simple-image-sharing-webapp/domain"
 )
 
 type SearchRequestParams struct {
@@ -17,7 +15,7 @@ type SearchRequestParams struct {
 
 type SearchHandler struct {
 	// ImageManager imagemanager.Searcher
-	ImageRetriever imagemanager.Retriever
+	ImageRetriever domain.Retriever
 	Decoder        *schema.Decoder
 }
 
@@ -44,7 +42,7 @@ func (h *SearchHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	images, err := h.ImageRetriever.Retrieve(r.Context(), rp.Tag)
 	switch err {
 	case nil:
-	case meta.ErrNotFound:
+	case domain.ErrNotFound:
 		log.Println("errnotfound")
 		// w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/html")
